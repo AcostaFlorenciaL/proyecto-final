@@ -6,7 +6,7 @@ import {
   updatePersonal, 
   deletePersonal 
 } from '/src/api/api.js'; // <-- Importar desde api.js
-import './empleados.css'
+import '../admin/adminPage.css';
 
 export default function Empleados() {
   const [empleados, setEmpleados] = useState([]);

@@ -20,6 +20,50 @@ class Usuario(UsuarioBase):
     class Config:
         from_attributes = True
 
+# --- Token (para Login) ---
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+    user: Usuario  # Enlaza con Usuario
+
+class TokenData(BaseModel):
+    email: Optional[str] = None
+
+# --- Producto ---
+class ProductoBase(BaseModel):
+    nombre: str
+    precio: Decimal
+    descripcion: Optional[str] = None
+    id_categoria: Optional[int] = None
+    imagen: Optional[str] = None
+    disponible: bool = True
+
+class ProductoCreate(ProductoBase):
+    pass
+
+class Producto(ProductoBase):
+    id_producto: int
+
+    class Config:
+        from_attributes = True
+
+# --- Personal ---
+class PersonalBase(BaseModel):
+    nombre_completo: str
+    puesto: str
+    telefono: Optional[str] = None
+    email: str
+
+class PersonalCreate(PersonalBase):
+    id_usuario: Optional[int] = None
+
+class Personal(PersonalBase):
+    id_personal: int
+    id_usuario: Optional[int] = None
+
+    class Config:
+        from_attributes = True
+
 # --- Pedido simplificado ---
 class DetallePedidoBase(BaseModel):
     id_producto: int
@@ -32,7 +76,7 @@ class DetallePedidoCreate(DetallePedidoBase):
 class DetallePedido(DetallePedidoBase):
     id_detalle: int
     id_pedido: int
-    producto: str
+    producto: Optional[Producto] = None
 
     class Config:
         from_attributes = True
@@ -53,7 +97,6 @@ class Pedido(BaseModel):
     fecha: datetime
     total: Decimal
     estado: str
-    # ❌ metodo_pago eliminado
     notas: Optional[str] = None
     detalles: List[DetallePedido] = []
 

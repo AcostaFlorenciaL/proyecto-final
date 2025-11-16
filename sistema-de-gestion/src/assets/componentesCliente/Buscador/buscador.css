@@ -1,7 +1,12 @@
+/* ============================================
+   BUSCADOR
+   ============================================ */
+
 .search-box {
   position: relative;
   display: flex;
   align-items: center;
+  max-width: 400px;
 }
 
 .search-box input {
@@ -14,6 +19,7 @@
   position: absolute;
   left: 10px;
   color: var(--naranja-vivo);
+  font-size: 1.2rem;
 }
 
 .search-results {
@@ -23,11 +29,14 @@
   right: 0;
   background: var(--blanco);
   border: 1px solid var(--naranja-suave);
-  border-radius: 8px;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
   max-height: 250px;
   overflow-y: auto;
   z-index: 2000;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 .search-results li {
@@ -35,7 +44,7 @@
   align-items: center;
   padding: 8px 10px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background var(--transition-fast);
 }
 
 .search-results li:hover {

@@ -13,7 +13,7 @@ import Registro from './assets/componentesCliente/Sesion/Registro';
 import AdminPage  from './assets/componentesAdmin/admin/AdminPage';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
-//import './App.css';
+import './styles/global.css';
 
 function App() {
   return (

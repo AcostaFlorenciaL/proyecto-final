@@ -21,6 +21,10 @@ const Nav = () => {
 
   const isActive = (path) => location.pathname === path ? 'active' : '';
 
+    if (location.pathname === '/admin') {
+    return null;
+  }
+
   return (
     <nav className="navbar navbar-expand-lg navbar-custom">
       <div className="container-fluid px-4">

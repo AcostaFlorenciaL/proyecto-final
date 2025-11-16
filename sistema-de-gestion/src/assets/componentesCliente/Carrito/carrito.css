@@ -1,3 +1,7 @@
+/* ============================================
+   CARRITO DE COMPRAS
+   ============================================ */
+
 .carrito-container {
   padding: 100px 20px 40px;
   max-width: 1200px;
@@ -6,34 +10,36 @@
 }
 
 .carrito-title {
-  color: #fc4d02;
+  color: var(--naranja-vivo);
   font-size: 2rem;
   margin-bottom: 30px;
   font-weight: 700;
 }
 
+/* Carrito vacío */
 .carrito-vacio {
   text-align: center;
   padding: 80px 20px;
-  color: #666;
+  color: var(--gris-medio);
 }
 
 .carrito-vacio i {
   font-size: 5rem;
-  color: #fc913a;
+  color: var(--naranja-suave);
   margin-bottom: 20px;
 }
 
 .carrito-vacio h2 {
-  color: #333;
+  color: var(--gris-oscuro);
   margin-bottom: 10px;
 }
 
+/* Lista de items */
 .carrito-items {
-  background: white;
-  border-radius: 12px;
+  background: var(--blanco);
+  border-radius: var(--radius-md);
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
   margin-bottom: 30px;
 }
 
@@ -42,7 +48,7 @@
   grid-template-columns: 100px 1fr auto auto;
   gap: 20px;
   padding: 20px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--gris-claro);
   align-items: center;
 }
 
@@ -54,27 +60,28 @@
   width: 100px;
   height: 100px;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 }
 
 .carrito-item-info h3 {
-  color: #333;
+  color: var(--gris-oscuro);
   font-size: 1.2rem;
   margin-bottom: 8px;
 }
 
 .carrito-item-desc {
-  color: #666;
+  color: var(--gris-medio);
   font-size: 0.9rem;
   margin-bottom: 8px;
 }
 
 .carrito-item-precio {
-  color: #fc4d02;
+  color: var(--naranja-vivo);
   font-weight: 600;
   font-size: 1.1rem;
 }
 
+/* Controles de cantidad */
 .carrito-item-controls {
   display: flex;
   align-items: center;
@@ -82,8 +89,8 @@
 }
 
 .btn-quantity {
-  background: #fc913a;
-  color: white;
+  background: var(--naranja-suave);
+  color: var(--blanco);
   border: none;
   width: 35px;
   height: 35px;
@@ -92,11 +99,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
+  transition: all var(--transition-normal);
 }
 
 .btn-quantity:hover {
-  background: #fc4d02;
+  background: var(--naranja-vivo);
   transform: scale(1.1);
 }
 
@@ -110,16 +117,17 @@
 .carrito-item-subtotal {
   font-size: 1.3rem;
   font-weight: 700;
-  color: #333;
+  color: var(--gris-oscuro);
   min-width: 120px;
   text-align: right;
 }
 
+/* Footer del carrito */
 .carrito-footer {
-  background: white;
-  border-radius: 12px;
+  background: var(--blanco);
+  border-radius: var(--radius-md);
   padding: 30px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 .carrito-total {
@@ -128,19 +136,20 @@
   align-items: center;
   margin-bottom: 25px;
   padding-bottom: 20px;
-  border-bottom: 2px solid #fc913a;
+  border-bottom: 2px solid var(--naranja-suave);
 }
 
 .carrito-total h3 {
-  color: #333;
+  color: var(--gris-oscuro);
   font-size: 1.5rem;
 }
 
 .carrito-total h2 {
-  color: #fc4d02;
+  color: var(--naranja-vivo);
   font-size: 2rem;
 }
 
+/* Acciones del carrito */
 .carrito-actions {
   display: flex;
   gap: 15px;
@@ -148,31 +157,31 @@
 }
 
 .btn-clear {
-  background: #666;
-  color: white;
+  background: var(--gris-medio);
+  color: var(--blanco);
   border: none;
   padding: 12px 30px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--transition-normal);
 }
 
 .btn-clear:hover {
-  background: #444;
+  background: var(--gris-oscuro);
 }
 
 .btn-checkout {
-  background: linear-gradient(135deg, #fc913a 0%, #fc4d02 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--naranja-suave) 0%, var(--naranja-vivo) 100%);
+  color: var(--blanco);
   border: none;
   padding: 12px 40px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--transition-normal);
 }
 
 .btn-checkout:hover {

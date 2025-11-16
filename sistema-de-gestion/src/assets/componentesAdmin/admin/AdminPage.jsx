@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Empleados from '../Empleados/Empleados';
 import GestionVentas from '../Ventas/GestionVentas';
 import HistorialPedidos from "../Historial/HistorialPedidos";
-import './AdminPage.css';
+import './adminPage.css';
 
 export default function AdminPage() {
   const navigate = useNavigate();

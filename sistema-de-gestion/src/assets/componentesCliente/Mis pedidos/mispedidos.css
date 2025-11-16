@@ -1,37 +1,37 @@
-:root {
-  --naranja-vivo: #fc4d02;
-  --crema-claro: #fffbe8;
-  --naranja-suave: #fc913a;
-  --negro: #000000;
-  --blanco: #ffffff;
-}
-
-body {
-  background-color: var(--crema-claro);
-  font-family: "Roboto", sans-serif;
-  margin: 0;
-  padding: 0;
-}
+/* ============================================
+   MIS PEDIDOS
+   ============================================ */
 
 .mis-pedidos-container {
-  padding: 20px;
+  padding: 100px 20px 40px;
+  max-width: 1000px;
+  margin: 0 auto;
 }
 
 .mis-pedidos-container h2 {
   color: var(--naranja-vivo);
   letter-spacing: 1px;
   margin-bottom: 20px;
+  font-weight: 700;
+}
+
+.pedidos-vacio {
+  text-align: center;
+  padding: 60px 20px;
+  background: var(--blanco);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
 }
 
 .pedido-card {
   background-color: var(--naranja-suave);
   color: var(--negro);
   border: 2px solid var(--naranja-vivo);
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   padding: 20px;
   margin-bottom: 20px;
   position: relative;
-  transition: transform 0.2s ease;
+  transition: transform var(--transition-fast);
 }
 
 .pedido-card:hover {
@@ -46,30 +46,40 @@ body {
   margin-bottom: 10px;
   background-color: var(--naranja-vivo);
   color: var(--blanco);
+  text-transform: uppercase;
+  font-size: 0.85rem;
 }
 
 .estado.entregado {
-  background-color: var(--naranja-vivo);
+  background-color: var(--success);
 }
 
 .estado.pendiente {
-  background-color: #ffd580;
+  background-color: var(--warning);
   color: var(--negro);
+}
+
+.estado.preparacion {
+  background-color: var(--info);
 }
 
 .pedido-id {
   font-weight: bold;
   margin: 5px 0;
   color: var(--blanco);
+  font-size: 1.1rem;
 }
 
 .pedido-productos {
   margin: 5px 0;
+  color: var(--negro);
+  font-weight: 500;
 }
 
 .pedido-fecha {
   color: var(--blanco);
   margin: 5px 0;
+  font-size: 0.9rem;
 }
 
 .pedido-total {
@@ -77,6 +87,6 @@ body {
   right: 20px;
   bottom: 20px;
   font-weight: bold;
-  font-size: 1.1rem;
+  font-size: 1.5rem;
   color: var(--blanco);
 }

@@ -41,7 +41,6 @@ def create_pedido(db: Session, pedido: schemas.PedidoCreate, user_id: int):
             id_cliente=cliente.id_cliente,
             total=pedido.total,
             estado="Pendiente",
-            # ❌ metodo_pago eliminado
             notas=pedido.notas
         )
         db.add(db_pedido)
@@ -79,3 +78,40 @@ def get_pedidos_by_usuario(db: Session, user_id: int):
         )\
         .order_by(models.Pedido.fecha.desc())\
         .all()
+
+
+# 🔥 NUEVAS FUNCIONES PARA ADMIN
+
+def get_all_pedidos(db: Session):
+    """
+    Obtiene TODOS los pedidos del sistema con sus relaciones
+    Para vista de administrador
+    """
+    return db.query(models.Pedido)\
+        .options(
+            joinedload(models.Pedido.detalles)
+            .joinedload(models.DetallePedido.producto),
+            joinedload(models.Pedido.cliente),
+            joinedload(models.Pedido.usuario)
+        )\
+        .order_by(models.Pedido.fecha.desc())\
+        .all()
+
+
+def update_pedido_estado(db: Session, pedido_id: int, nuevo_estado: str):
+    """
+    Actualiza el estado de un pedido
+    """
+    pedido = db.query(models.Pedido).filter(
+        models.Pedido.id_pedido == pedido_id
+    ).first()
+    
+    if not pedido:
+        return None
+    
+    pedido.estado = nuevo_estado
+    db.commit()
+    db.refresh(pedido)
+    
+    print(f"✅ Pedido {pedido_id} actualizado a estado: {nuevo_estado}")
+    return pedido
