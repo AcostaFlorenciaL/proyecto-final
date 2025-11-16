@@ -1,25 +1,35 @@
 import { useCart } from '/src/context/CartContext';
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import './carrito.css';
-import { crearPedido } from "/src/api/api.js"; // <-- Importar desde api.js
+import { crearPedido } from "/src/api/api.js";
 
 const Carrito = () => {
   const { cartItems, addToCart, removeFromCart, clearCart, getCartTotal } = useCart();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
-  // Función para limpiar el precio
+  // ✅ Función para limpiar el precio
   const parsePrice = (precio) => {
     if (typeof precio === 'number') return precio;
-    return parseFloat(String(precio).replace(/[$.]/g, '').replace(',', '.'));
+    return parseFloat(String(precio).replace(/[$.]/g, '').replace(',', '.')) || 0;
   };
 
   const handleRealizarPedido = async () => {
     try {
+      setLoading(true);
       const userId = sessionStorage.getItem('userId');
 
       if (!userId) {
         alert('⚠️ Debes iniciar sesión para realizar un pedido');
         navigate('/login');
+        return;
+      }
+
+      // ✅ Validar que haya items en el carrito
+      if (cartItems.length === 0) {
+        alert('⚠️ El carrito está vacío');
+        setLoading(false);
         return;
       }
 
@@ -33,17 +43,26 @@ const Carrito = () => {
         };
       });
 
+      const total = getCartTotal();
+
+      // ✅ Validar que el total sea válido
+      if (total <= 0) {
+        alert('⚠️ Error: Total inválido');
+        setLoading(false);
+        return;
+      }
+
+      // ✅ SUPER SIMPLIFICADO: Solo lo esencial
       const pedido = {
-        id_cliente: parseInt(userId),
-        total: getCartTotal(),
-        metodo_pago: "Efectivo",
-        notas: "Pedido desde React",
+        total: total,
         detalles: detalles
+        // El método de pago se elige al momento de entregar/pagar
+        // La dirección ya está guardada en el perfil del cliente
       };
 
       console.log("📦 Enviando pedido:", pedido);
       
-      const respuesta = await crearPedido(userId, pedido); // Usar la función de la API
+      const respuesta = await crearPedido(userId, pedido);
 
       console.log("✅ Respuesta del backend:", respuesta);
 
@@ -54,6 +73,8 @@ const Carrito = () => {
     } catch (error) {
       console.error("❌ Error al enviar pedido:", error);
       alert(`❌ Error al procesar el pedido: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -64,6 +85,12 @@ const Carrito = () => {
           <i className="bi bi-cart-x"></i>
           <h2>Tu carrito está vacío</h2>
           <p>Agrega productos desde el menú</p>
+          <button 
+            className="btn-checkout" 
+            onClick={() => navigate('/carta')}
+          >
+            Ver Menú
+          </button>
         </div>
       </div>
     );
@@ -76,7 +103,7 @@ const Carrito = () => {
       <div className="carrito-items">
         {cartItems.map((item, index) => {
           const precioNumerico = parsePrice(item.precio);
-          const subtotal = (precioNumerico * item.cantidad).toLocaleString('es-AR');
+          const subtotal = (precioNumerico * item.cantidad);
 
           return (
             <div key={`${item.id_producto || item.id}-${index}`} className="carrito-item">
@@ -91,7 +118,8 @@ const Carrito = () => {
               <div className="carrito-item-controls">
                 <button
                   className="btn-quantity"
-                  onClick={() => removeFromCart(item.nombre)}
+                  onClick={() => removeFromCart(item.id_producto || item.id)}
+                  disabled={loading}
                 >
                   <i className="bi bi-dash"></i>
                 </button>
@@ -101,13 +129,14 @@ const Carrito = () => {
                 <button
                   className="btn-quantity"
                   onClick={() => addToCart(item)}
+                  disabled={loading}
                 >
                   <i className="bi bi-plus"></i>
                 </button>
               </div>
 
               <div className="carrito-item-subtotal">
-                ${subtotal}
+                ${subtotal.toLocaleString('es-AR')}
               </div>
             </div>
           );
@@ -121,14 +150,25 @@ const Carrito = () => {
         </div>
 
         <div className="carrito-actions">
-          <button className="btn-clear" onClick={clearCart}>
+          <button 
+            className="btn-clear" 
+            onClick={clearCart}
+            disabled={loading}
+          >
             Vaciar Carrito
           </button>
           <button
             className="btn-checkout"
             onClick={handleRealizarPedido}
+            disabled={loading}
           >
-            Realizar Pedido
+            {loading ? (
+              <>
+                <i className="bi bi-hourglass-split"></i> Procesando...
+              </>
+            ) : (
+              'Realizar Pedido'
+            )}
           </button>
         </div>
       </div>

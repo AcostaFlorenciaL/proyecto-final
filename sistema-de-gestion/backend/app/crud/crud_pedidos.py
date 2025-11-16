@@ -3,38 +3,79 @@ from app.models import models
 from app.schemas import schemas
 
 def create_pedido(db: Session, pedido: schemas.PedidoCreate, user_id: int):
-    # Crear el Pedido principal
-    db_pedido = models.Pedido(
-        id_usuario=user_id,
-        id_cliente=pedido.id_cliente, # Asumiendo que el id_cliente es el id_usuario
-        total=pedido.total,
-        estado=pedido.estado,
-        metodo_pago=pedido.metodo_pago,
-        notas=pedido.notas
-    )
-    db.add(db_pedido)
-    db.commit()
-    db.refresh(db_pedido)
-
-    # Crear los Detalles del Pedido
-    for detalle in pedido.detalles:
-        db_detalle = models.DetallePedido(
-            id_pedido=db_pedido.id_pedido,
-            id_producto=detalle.id_producto,
-            cantidad=detalle.cantidad,
-            subtotal=detalle.subtotal
+    """
+    Crea un nuevo pedido (SIMPLIFICADO)
+    ✅ Sin método de pago - se elige al momento de entregar
+    ✅ La dirección está en la tabla cliente
+    """
+    try:
+        # Buscar el cliente del usuario
+        cliente = db.query(models.Cliente).filter(
+            models.Cliente.id_usuario == user_id
+        ).first()
+        
+        if not cliente:
+            # Crear cliente si no existe (por seguridad)
+            usuario = db.query(models.Usuario).filter(
+                models.Usuario.id_usuarios == user_id
+            ).first()
+            
+            if not usuario:
+                raise ValueError(f"Usuario {user_id} no encontrado")
+            
+            cliente = models.Cliente(
+                id_usuario=user_id,
+                nombre_completo=usuario.nombreCompleto or "Cliente",
+                telefono=usuario.telefono or "",
+                email=usuario.email,
+                direccion=""  # Sin dirección por defecto
+            )
+            db.add(cliente)
+            db.commit()
+            db.refresh(cliente)
+            print(f"⚠️ Cliente {cliente.id_cliente} creado sin dirección")
+        
+        # Crear el pedido
+        db_pedido = models.Pedido(
+            id_usuario=user_id,
+            id_cliente=cliente.id_cliente,
+            total=pedido.total,
+            estado="Pendiente",
+            # ❌ metodo_pago eliminado
+            notas=pedido.notas
         )
-        db.add(db_detalle)
-    
-    db.commit()
-    db.refresh(db_pedido) # Refrescar para cargar la relación 'detalles'
-    return db_pedido
+        db.add(db_pedido)
+        db.commit()
+        db.refresh(db_pedido)
+
+        # Crear detalles
+        for detalle in pedido.detalles:
+            db_detalle = models.DetallePedido(
+                id_pedido=db_pedido.id_pedido,
+                id_producto=detalle.id_producto,
+                cantidad=detalle.cantidad,
+                subtotal=detalle.subtotal
+            )
+            db.add(db_detalle)
+        
+        db.commit()
+        db.refresh(db_pedido)
+        
+        print(f"✅ Pedido {db_pedido.id_pedido} creado - Total: ${pedido.total}")
+        return db_pedido
+        
+    except Exception as e:
+        db.rollback()
+        print(f"❌ Error al crear pedido: {str(e)}")
+        raise
 
 def get_pedidos_by_usuario(db: Session, user_id: int):
-    return db.query(models.Pedido).filter(models.Pedido.id_usuario == user_id)\
+    """Obtiene pedidos del usuario con sus detalles"""
+    return db.query(models.Pedido)\
+        .filter(models.Pedido.id_usuario == user_id)\
         .options(
-            joinedload(models.Pedido.detalles)\
-            .joinedload(models.DetallePedido.producto) # Carga anidada: Pedido -> Detalles -> Producto
+            joinedload(models.Pedido.detalles)
+            .joinedload(models.DetallePedido.producto)
         )\
         .order_by(models.Pedido.fecha.desc())\
         .all()

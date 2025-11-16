@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DECIMAL, DATETIME, TEXT, Identity
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DECIMAL, DATETIME, TEXT
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -66,11 +66,11 @@ class Pedido(Base):
     __tablename__ = "pedidos"
     id_pedido = Column(Integer, primary_key=True, index=True, autoincrement=True)
     id_usuario = Column(Integer, ForeignKey("usuarios.id_usuarios"))
-    id_cliente = Column(Integer, ForeignKey("cliente.id_cliente")) # Puede ser nulo si el usuario no tiene perfil cliente?
+    id_cliente = Column(Integer, ForeignKey("cliente.id_cliente"))
     fecha = Column(DATETIME, default=func.now())
     total = Column(DECIMAL(10, 2))
     estado = Column(String(20), default='Pendiente')
-    metodo_pago = Column(String(50))
+    # ✅ metodo_pago eliminado
     notas = Column(TEXT)
 
     usuario = relationship("Usuario", back_populates="pedidos")

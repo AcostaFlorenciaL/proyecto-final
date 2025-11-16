@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { registro } from '/src/api/api.js'; // <-- Importar desde api.js
+import { registro } from '/src/api/api.js';
 import './login.css';
 
 function Registro() {
@@ -8,7 +8,7 @@ function Registro() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [telefono, setTelefono] = useState('');
-  // const [direccion, setDireccion] = useState(''); // El backend no pide dirección en el registro
+  const [direccion, setDireccion] = useState(''); // ✅ AGREGADO
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
@@ -33,11 +33,12 @@ function Registro() {
         contraseña: password,
         nombreCompleto: nombre,
         telefono,
+        direccion  // ✅ AGREGADO
       };
 
       console.log('📤 Enviando registro:', userData);
       
-      const responseData = await registro(userData); // Usar la función de la API
+      const responseData = await registro(userData);
 
       console.log('✅ Usuario registrado:', responseData);
 
@@ -102,6 +103,17 @@ function Registro() {
               placeholder="Teléfono..."
               value={telefono}
               onChange={(e) => setTelefono(e.target.value)}
+              required
+              disabled={loading}
+            />
+
+            {/* ✅ NUEVO CAMPO DIRECCIÓN */}
+            <input
+              type="text"
+              className="login-input"
+              placeholder="Dirección de entrega..."
+              value={direccion}
+              onChange={(e) => setDireccion(e.target.value)}
               required
               disabled={loading}
             />

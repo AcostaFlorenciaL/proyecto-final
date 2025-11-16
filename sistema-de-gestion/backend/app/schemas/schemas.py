@@ -1,33 +1,9 @@
 from pydantic import BaseModel, EmailStr
-from typing import List, Optional, Any
+from typing import List, Optional
 from decimal import Decimal
 from datetime import datetime
 
-# --- Producto y Categoria ---
-class ProductoBase(BaseModel):
-    nombre: str
-    precio: Decimal
-    descripcion: Optional[str] = None
-    id_categoria: int
-    imagen: Optional[str] = None
-    disponible: Optional[bool] = True
-
-class Producto(ProductoBase):
-    id_producto: int
-
-    class Config:
-        from_attributes = True
-
-class Categoria(BaseModel):
-    id_categoria: int
-    nombre_categoria: str
-    descripcion: Optional[str] = None
-    productos: List[Producto] = []
-
-    class Config:
-        from_attributes = True
-
-# --- Usuario y Auth ---
+# --- Usuario con dirección ---
 class UsuarioBase(BaseModel):
     email: EmailStr
     nombreCompleto: Optional[str] = None
@@ -35,6 +11,7 @@ class UsuarioBase(BaseModel):
 
 class UsuarioCreate(UsuarioBase):
     contraseña: str
+    direccion: Optional[str] = None  # ✅ AGREGADO
 
 class Usuario(UsuarioBase):
     id_usuarios: int
@@ -43,32 +20,7 @@ class Usuario(UsuarioBase):
     class Config:
         from_attributes = True
 
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-    user: Usuario
-
-class TokenData(BaseModel):
-    email: Optional[str] = None
-
-# --- Personal ---
-class PersonalBase(BaseModel):
-    nombre_completo: str
-    puesto: str
-    email: EmailStr
-    telefono: Optional[str] = None
-    id_usuario: Optional[int] = None
-
-class PersonalCreate(PersonalBase):
-    pass
-
-class Personal(PersonalBase):
-    id_personal: int
-
-    class Config:
-        from_attributes = True
-        
-# --- Pedido y Detalle ---
+# --- Pedido simplificado ---
 class DetallePedidoBase(BaseModel):
     id_producto: int
     cantidad: int
@@ -80,26 +32,29 @@ class DetallePedidoCreate(DetallePedidoBase):
 class DetallePedido(DetallePedidoBase):
     id_detalle: int
     id_pedido: int
-    producto: Optional[Producto] # Para incluir detalles del producto
+    producto: str
 
     class Config:
         from_attributes = True
 
-class PedidoBase(BaseModel):
+class PedidoCreate(BaseModel):
+    """
+    ✅ SUPER SIMPLIFICADO
+    Solo lo esencial - todo lo demás lo calcula el backend
+    """
     total: Decimal
-    metodo_pago: Optional[str] = "Efectivo"
-    notas: Optional[str] = None
-    estado: Optional[str] = "Pendiente"
-
-class PedidoCreate(PedidoBase):
-    # id_cliente es el id_usuarios
-    id_cliente: int 
     detalles: List[DetallePedidoCreate]
+    notas: Optional[str] = None
 
-class Pedido(PedidoBase):
+class Pedido(BaseModel):
     id_pedido: int
     id_usuario: int
+    id_cliente: Optional[int] = None
     fecha: datetime
+    total: Decimal
+    estado: str
+    # ❌ metodo_pago eliminado
+    notas: Optional[str] = None
     detalles: List[DetallePedido] = []
 
     class Config:

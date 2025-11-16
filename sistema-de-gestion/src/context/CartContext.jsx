@@ -13,32 +13,50 @@ export const useCart = () => {
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
 
+  // ✅ Función helper para parsear precios
+  const parsePrice = (precio) => {
+    if (typeof precio === 'number') return precio;
+    // Elimina símbolos y convierte a número
+    const cleaned = String(precio).replace(/[$.]/g, '').replace(',', '.');
+    return parseFloat(cleaned) || 0;
+  };
+
   const addToCart = (item) => {
     setCartItems((prevItems) => {
-      const existingItem = prevItems.find((i) => i.nombre === item.nombre);
+      // ✅ Buscar por id_producto en lugar de nombre
+      const existingItem = prevItems.find(
+        (i) => i.id_producto === item.id_producto
+      );
       
       if (existingItem) {
         return prevItems.map((i) =>
-          i.nombre === item.nombre
+          i.id_producto === item.id_producto
             ? { ...i, cantidad: i.cantidad + 1 }
             : i
         );
       }
       
-      return [...prevItems, { ...item, cantidad: 1 }];
+      // ✅ Asegurar que el precio sea numérico al agregar
+      return [...prevItems, { 
+        ...item, 
+        cantidad: 1,
+        precio: parsePrice(item.precio) 
+      }];
     });
   };
 
-  const removeFromCart = (nombre) => {
+  const removeFromCart = (id_producto) => {
     setCartItems((prevItems) => {
-      const existingItem = prevItems.find((i) => i.nombre === nombre);
+      const existingItem = prevItems.find((i) => i.id_producto === id_producto);
+      
+      if (!existingItem) return prevItems;
       
       if (existingItem.cantidad === 1) {
-        return prevItems.filter((i) => i.nombre !== nombre);
+        return prevItems.filter((i) => i.id_producto !== id_producto);
       }
       
       return prevItems.map((i) =>
-        i.nombre === nombre
+        i.id_producto === id_producto
           ? { ...i, cantidad: i.cantidad - 1 }
           : i
       );
@@ -53,9 +71,10 @@ export const CartProvider = ({ children }) => {
     return cartItems.reduce((total, item) => total + item.cantidad, 0);
   };
 
+  // ✅ Cálculo de total mejorado
   const getCartTotal = () => {
     return cartItems.reduce((total, item) => {
-      const precio = parseFloat(item.precio.replace(/[$\.]/g, '').replace(',', '.'));
+      const precio = parsePrice(item.precio);
       return total + (precio * item.cantidad);
     }, 0);
   };

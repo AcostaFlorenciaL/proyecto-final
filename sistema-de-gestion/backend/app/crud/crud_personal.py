@@ -3,12 +3,29 @@ from app.models import models
 from app.schemas import schemas
 
 def get_personal(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Personal).offset(skip).limit(limit).all()
+    """
+    Obtiene todo el personal con paginación
+    ✅ Agregado ORDER BY para SQL Server
+    """
+    return db.query(models.Personal)\
+        .order_by(models.Personal.id_personal)\
+        .offset(skip)\
+        .limit(limit)\
+        .all()
 
 def get_personal_by_puesto(db: Session, puesto: str):
-    return db.query(models.Personal).filter(models.Personal.puesto == puesto).all()
+    """
+    Obtiene personal filtrado por puesto
+    """
+    return db.query(models.Personal)\
+        .filter(models.Personal.puesto == puesto)\
+        .order_by(models.Personal.nombre_completo)\
+        .all()
 
 def create_personal(db: Session, personal: schemas.PersonalCreate):
+    """
+    Crea un nuevo registro de personal
+    """
     db_personal = models.Personal(**personal.dict())
     db.add(db_personal)
     db.commit()
@@ -16,7 +33,13 @@ def create_personal(db: Session, personal: schemas.PersonalCreate):
     return db_personal
 
 def update_personal(db: Session, personal_id: int, personal: schemas.PersonalCreate):
-    db_personal = db.query(models.Personal).filter(models.Personal.id_personal == personal_id).first()
+    """
+    Actualiza un registro de personal existente
+    """
+    db_personal = db.query(models.Personal)\
+        .filter(models.Personal.id_personal == personal_id)\
+        .first()
+    
     if not db_personal:
         return None
     
@@ -30,9 +53,16 @@ def update_personal(db: Session, personal_id: int, personal: schemas.PersonalCre
     return db_personal
 
 def delete_personal(db: Session, personal_id: int):
-    db_personal = db.query(models.Personal).filter(models.Personal.id_personal == personal_id).first()
+    """
+    Elimina un registro de personal
+    """
+    db_personal = db.query(models.Personal)\
+        .filter(models.Personal.id_personal == personal_id)\
+        .first()
+    
     if not db_personal:
         return None
+    
     db.delete(db_personal)
     db.commit()
     return db_personal
