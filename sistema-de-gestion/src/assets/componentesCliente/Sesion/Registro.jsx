@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { registro } from '/src/api/api.js'; // <-- Importar desde api.js
 import './login.css';
 
 function Registro() {
@@ -7,7 +8,7 @@ function Registro() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [telefono, setTelefono] = useState('');
-  const [direccion, setDireccion] = useState('');
+  // const [direccion, setDireccion] = useState(''); // El backend no pide dirección en el registro
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
@@ -20,7 +21,6 @@ function Registro() {
     setSuccess('');
     setLoading(true);
 
-    // Validaciones básicas
     if (password.length < 6) {
       setError('La contraseña debe tener al menos 6 caracteres');
       setLoading(false);
@@ -28,56 +28,28 @@ function Registro() {
     }
 
     try {
-      console.log('📤 Enviando registro:', {
+      const userData = {
         email,
+        contraseña: password,
         nombreCompleto: nombre,
-        telefono
-      });
+        telefono,
+      };
 
-      const response = await fetch("http://localhost:8000/api/auth/registro", {  // ← CAMBIO AQUÍ
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          contraseña: password,
-          nombreCompleto: nombre,
-          telefono,
-        }),
-      });
+      console.log('📤 Enviando registro:', userData);
+      
+      const responseData = await registro(userData); // Usar la función de la API
 
-      console.log('📥 Response status:', response.status);
-
-      if (!response.ok) {
-        const data = await response.json();
-        console.error('❌ Error del backend:', data);
-        
-        // Manejar diferentes tipos de errores
-        if (typeof data.detail === 'string') {
-          setError(data.detail);
-        } else if (Array.isArray(data.detail)) {
-          // Si es un array de errores de validación
-          const errores = data.detail.map(err => err.msg).join(', ');
-          setError(errores);
-        } else {
-          setError('Error al registrar usuario');
-        }
-        setLoading(false);
-        return;
-      }
-
-      const userData = await response.json();
-      console.log('✅ Usuario registrado:', userData);
+      console.log('✅ Usuario registrado:', responseData);
 
       setSuccess("✅ Registro exitoso. Redirigiendo al login...");
 
-      // Redirigir después de 2 segundos
       setTimeout(() => {
         navigate("/login");
       }, 2000);
 
     } catch (err) {
       console.error('💥 Error:', err);
-      setError("No se pudo conectar con el servidor. Verifica que el backend esté corriendo.");
+      setError(err.message || "No se pudo conectar con el servidor.");
       setLoading(false);
     }
   };

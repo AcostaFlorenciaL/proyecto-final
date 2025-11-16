@@ -1,5 +1,5 @@
 import { useState } from 'react';
-//import './historialPedidos.css';
+import './historialPedidos.css';
 
 export default function Pedidos() {
   const [pedidos, setPedidos] = useState([]);

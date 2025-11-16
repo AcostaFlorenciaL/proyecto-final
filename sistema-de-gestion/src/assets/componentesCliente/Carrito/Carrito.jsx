@@ -1,16 +1,20 @@
-
 import { useCart } from '/src/context/CartContext';
 import { useNavigate } from 'react-router-dom';
 import './carrito.css';
-import { crearPedido } from "/src/api/api.js";
+import { crearPedido } from "/src/api/api.js"; // <-- Importar desde api.js
 
 const Carrito = () => {
   const { cartItems, addToCart, removeFromCart, clearCart, getCartTotal } = useCart();
   const navigate = useNavigate();
 
+  // Función para limpiar el precio
+  const parsePrice = (precio) => {
+    if (typeof precio === 'number') return precio;
+    return parseFloat(String(precio).replace(/[$.]/g, '').replace(',', '.'));
+  };
+
   const handleRealizarPedido = async () => {
     try {
-      // Obtener userId del sessionStorage
       const userId = sessionStorage.getItem('userId');
 
       if (!userId) {
@@ -19,22 +23,18 @@ const Carrito = () => {
         return;
       }
 
-      // Preparar detalles del pedido
       const detalles = cartItems.map((item) => {
-        // Limpiar el precio (quitar $, puntos, etc)
-        const precioLimpio = typeof item.precio === 'string'
-          ? parseFloat(item.precio.replace(/[^0-9.,]/g, '').replace(',', '.'))
-          : parseFloat(item.precio);
-
+        const precioLimpio = parsePrice(item.precio);
+        
         return {
-          id_producto: item.id_producto || item.id, // ← CORREGIDO
+          id_producto: item.id_producto || item.id,
           cantidad: item.cantidad,
           subtotal: precioLimpio * item.cantidad
         };
       });
 
       const pedido = {
-        id_cliente: parseInt(userId), // Asumiendo que id_cliente = id_usuario
+        id_cliente: parseInt(userId),
         total: getCartTotal(),
         metodo_pago: "Efectivo",
         notas: "Pedido desde React",
@@ -42,19 +42,13 @@ const Carrito = () => {
       };
 
       console.log("📦 Enviando pedido:", pedido);
-      console.log("🛒 Items del carrito:", cartItems);
-
-      const respuesta = await crearPedido(userId, pedido);
+      
+      const respuesta = await crearPedido(userId, pedido); // Usar la función de la API
 
       console.log("✅ Respuesta del backend:", respuesta);
 
-      // Limpiar carrito
       clearCart();
-
-      // Mostrar mensaje de éxito
       alert("✅ Pedido realizado con éxito!");
-
-      // Redirigir a Mis Pedidos
       navigate('/pedidos');
 
     } catch (error) {
@@ -80,39 +74,44 @@ const Carrito = () => {
       <h1 className="carrito-title">Tu Carrito</h1>
 
       <div className="carrito-items">
-        {cartItems.map((item, index) => (
-          <div key={`${item.id_producto || item.id}-${index}`} className="carrito-item">
-            <img src={item.imagen} alt={item.nombre} className="carrito-item-img" />
+        {cartItems.map((item, index) => {
+          const precioNumerico = parsePrice(item.precio);
+          const subtotal = (precioNumerico * item.cantidad).toLocaleString('es-AR');
 
-            <div className="carrito-item-info">
-              <h3>{item.nombre}</h3>
-              <p className="carrito-item-desc">{item.descripcion}</p>
-              <p className="carrito-item-precio">{item.precio}</p>
+          return (
+            <div key={`${item.id_producto || item.id}-${index}`} className="carrito-item">
+              <img src={item.imagen} alt={item.nombre} className="carrito-item-img" />
+
+              <div className="carrito-item-info">
+                <h3>{item.nombre}</h3>
+                <p className="carrito-item-desc">{item.descripcion}</p>
+                <p className="carrito-item-precio">${precioNumerico.toLocaleString('es-AR')}</p>
+              </div>
+
+              <div className="carrito-item-controls">
+                <button
+                  className="btn-quantity"
+                  onClick={() => removeFromCart(item.nombre)}
+                >
+                  <i className="bi bi-dash"></i>
+                </button>
+
+                <span className="carrito-item-cantidad">{item.cantidad}</span>
+
+                <button
+                  className="btn-quantity"
+                  onClick={() => addToCart(item)}
+                >
+                  <i className="bi bi-plus"></i>
+                </button>
+              </div>
+
+              <div className="carrito-item-subtotal">
+                ${subtotal}
+              </div>
             </div>
-
-            <div className="carrito-item-controls">
-              <button
-                className="btn-quantity"
-                onClick={() => removeFromCart(item.nombre)}
-              >
-                <i className="bi bi-dash"></i>
-              </button>
-
-              <span className="carrito-item-cantidad">{item.cantidad}</span>
-
-              <button
-                className="btn-quantity"
-                onClick={() => addToCart(item)}
-              >
-                <i className="bi bi-plus"></i>
-              </button>
-            </div>
-
-            <div className="carrito-item-subtotal">
-              ${(parseFloat(item.precio.toString().replace(/[^0-9.,]/g, '').replace(',', '.')) * item.cantidad).toLocaleString('es-AR')}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="carrito-footer">

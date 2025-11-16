@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getPedidos } from "/src/api/api.js"; // <-- Importar desde api.js
 import "./mispedidos.css";
 
 const MisPedidos = () => {
@@ -14,7 +15,6 @@ const MisPedidos = () => {
 
   const cargarPedidos = async () => {
     try {
-      // Verificar que el usuario esté logueado
       const userId = sessionStorage.getItem('userId');
       
       if (!userId) {
@@ -25,20 +25,16 @@ const MisPedidos = () => {
 
       console.log('📦 Cargando pedidos del usuario:', userId);
 
-      // Llamar a la API
-      const response = await fetch(`http://localhost:8000/api/pedidos/usuario/${userId}`);
+      // Usar la función de la API
+      const data = await getPedidos(userId);
       
-      if (!response.ok) {
-        throw new Error('Error al cargar pedidos');
-      }
-
-      const data = await response.json();
       console.log('✅ Pedidos recibidos:', data);
 
-      // Adaptar los datos al formato del componente
+      // Adaptar los datos (la respuesta del backend ya está bien estructurada)
       const pedidosAdaptados = data.map(pedido => ({
         id: pedido.id_pedido,
         estado: pedido.estado,
+        // El backend nos da los detalles con el producto anidado
         productos: pedido.detalles?.map(d => 
           `${d.producto?.nombre || 'Producto'} x${d.cantidad}`
         ) || ['Sin productos'],
@@ -62,9 +58,9 @@ const MisPedidos = () => {
     const año = fecha.getFullYear();
     const hora = String(fecha.getHours()).padStart(2, '0');
     const minutos = String(fecha.getMinutes()).padStart(2, '0');
-    const segundos = String(fecha.getSeconds()).padStart(2, '0');
     
-    return `${dia}/${mes}/${año}, ${hora}:${minutos}:${segundos}`;
+    // Devolvemos un formato más limpio
+    return `${dia}/${mes}/${año}, ${hora}:${minutos} hs`;
   };
 
   const getEstadoClass = (estado) => {
@@ -73,7 +69,8 @@ const MisPedidos = () => {
         return "estado entregado";
       case "pendiente":
         return "estado pendiente";
-      case "en_preparacion":
+      case "en_preparacion": // El backend puede usar "en_preparacion"
+      case "en preparación": // O el frontend puede usar "en preparación"
         return "estado preparacion";
       case "listo":
         return "estado listo";
@@ -120,10 +117,11 @@ const MisPedidos = () => {
       {pedidos.map((pedido) => (
         <div key={pedido.id} className="pedido-card">
           <div className={getEstadoClass(pedido.estado)}>
-            {pedido.estado.toUpperCase()}
+            {/* Reemplazar guiones bajos para mostrar */}
+            {pedido.estado.replace('_', ' ').toUpperCase()}
           </div>
 
-          <p className="pedido-id">#{String(pedido.id).padStart(3, "0")}</p>
+          <p className="pedido-id">PEDIDO #{String(pedido.id).padStart(4, "0")}</p>
           <p className="pedido-productos">
             {pedido.productos.join(", ")}
           </p>

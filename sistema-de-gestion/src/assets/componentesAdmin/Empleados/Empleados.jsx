@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
-//import './Empleados.css';
+import { 
+  getPersonal, 
+  getPersonalByPuesto, 
+  createPersonal, 
+  updatePersonal, 
+  deletePersonal 
+} from '/src/api/api.js'; // <-- Importar desde api.js
+import './empleados.css'
 
 export default function Empleados() {
   const [empleados, setEmpleados] = useState([]);
@@ -21,32 +28,25 @@ export default function Empleados() {
   // Cargar empleados al montar el componente
   useEffect(() => {
     cargarEmpleados();
-  }, []);
+  }, [filtroPuesto]); // Recargar cuando cambia el filtro
 
   const cargarEmpleados = async () => {
     try {
       setLoading(true);
-      const url = filtroPuesto === 'todos' 
-        ? 'http://localhost:8000/personal/'
-        : `http://localhost:8000/personal/puesto/${filtroPuesto}`;
-      
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('Error al cargar empleados');
-      
-      const data = await response.json();
-      setEmpleados(data);
       setError(null);
+      let data;
+      if (filtroPuesto === 'todos') {
+        data = await getPersonal();
+      } else {
+        data = await getPersonalByPuesto(filtroPuesto);
+      }
+      setEmpleados(data);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
   };
-
-  // Recargar cuando cambia el filtro
-  useEffect(() => {
-    cargarEmpleados();
-  }, [filtroPuesto]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -77,21 +77,13 @@ export default function Empleados() {
 
   const guardarEmpleado = async () => {
     try {
-      const url = empleadoEditando
-        ? `http://localhost:8000/empleados/${empleadoEditando.id_personal}`
-        : 'http://localhost:8000/empleados/';
-      
-      const method = empleadoEditando ? 'PUT' : 'POST';
-      
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData)
-      });
-
-      if (!response.ok) throw new Error('Error al guardar empleado');
+      if (empleadoEditando) {
+        // Actualizar
+        await updatePersonal(empleadoEditando.id_personal, formData);
+      } else {
+        // Crear
+        await createPersonal(formData);
+      }
       
       await cargarEmpleados();
       setMostrarModal(false);
@@ -104,12 +96,7 @@ export default function Empleados() {
   const eliminarEmpleado = async (id) => {
     if (window.confirm('¿Estás seguro de eliminar este empleado?')) {
       try {
-        const response = await fetch(`http://localhost:8000/empleados/${id}`, {
-          method: 'DELETE'
-        });
-
-        if (!response.ok) throw new Error('Error al eliminar empleado');
-        
+        await deletePersonal(id);
         await cargarEmpleados();
         setError(null);
       } catch (err) {
@@ -139,7 +126,6 @@ export default function Empleados() {
         </button>
       </div>
 
-      {/* Error Alert */}
       {error && (
         <div className="alert alert-danger alert-dismissible fade show" role="alert">
           <i className="bi bi-exclamation-triangle-fill me-2"></i>
@@ -152,7 +138,6 @@ export default function Empleados() {
         </div>
       )}
 
-      {/* Filtros */}
       <div className="mb-3">
         <label className="me-2 fw-semibold">Filtrar por puesto:</label>
         <select
@@ -170,7 +155,6 @@ export default function Empleados() {
         </span>
       </div>
 
-      {/* Tabla de empleados */}
       <div className="card shadow">
         <div className="card-body">
           <div className="table-responsive">
@@ -260,17 +244,7 @@ export default function Empleados() {
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">
-                  {empleadoEditando ? (
-                    <>
-                      <i className="bi bi-pencil me-2"></i>
-                      Editar Empleado
-                    </>
-                  ) : (
-                    <>
-                      <i className="bi bi-plus-circle me-2"></i>
-                      Nuevo Empleado
-                    </>
-                  )}
+                  {empleadoEditando ? "Editar Empleado" : "Nuevo Empleado"}
                 </h5>
                 <button
                   className="btn-close"
@@ -279,25 +253,18 @@ export default function Empleados() {
               </div>
               <div className="modal-body">
                 <div className="mb-3">
-                  <label className="form-label fw-semibold">
-                    <i className="bi bi-person me-2"></i>
-                    Nombre Completo *
-                  </label>
+                  <label className="form-label fw-semibold">Nombre Completo *</label>
                   <input
                     type="text"
                     className="form-control"
                     name="nombre_completo"
                     value={formData.nombre_completo}
                     onChange={handleInputChange}
-                    placeholder="Ej: Juan Pérez"
                     required
                   />
                 </div>
                 <div className="mb-3">
-                  <label className="form-label fw-semibold">
-                    <i className="bi bi-briefcase me-2"></i>
-                    Puesto *
-                  </label>
+                  <label className="form-label fw-semibold">Puesto *</label>
                   <select
                     className="form-select"
                     name="puesto"
@@ -312,42 +279,32 @@ export default function Empleados() {
                   </select>
                 </div>
                 <div className="mb-3">
-                  <label className="form-label fw-semibold">
-                    <i className="bi bi-telephone me-2"></i>
-                    Teléfono
-                  </label>
+                  <label className="form-label fw-semibold">Teléfono</label>
                   <input
                     type="tel"
                     className="form-control"
                     name="telefono"
                     value={formData.telefono}
                     onChange={handleInputChange}
-                    placeholder="Ej: 1234567890"
                   />
                 </div>
                 <div className="mb-3">
-                  <label className="form-label fw-semibold">
-                    <i className="bi bi-envelope me-2"></i>
-                    Email *
-                  </label>
+                  <label className="form-label fw-semibold">Email *</label>
                   <input
                     type="email"
                     className="form-control"
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    placeholder="Ej: empleado@ejemplo.com"
                     required
                   />
                 </div>
-                <small className="text-muted">* Campos obligatorios</small>
               </div>
               <div className="modal-footer">
                 <button
                   className="btn btn-secondary"
                   onClick={() => setMostrarModal(false)}
                 >
-                  <i className="bi bi-x-circle me-2"></i>
                   Cancelar
                 </button>
                 <button 
@@ -355,7 +312,6 @@ export default function Empleados() {
                   onClick={guardarEmpleado}
                   disabled={!formData.nombre_completo || !formData.puesto || !formData.email}
                 >
-                  <i className="bi bi-check-circle me-2"></i>
                   Guardar
                 </button>
               </div>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { login } from '/src/api/api.js'; // <-- Importar desde api.js
 import './login.css';
 
 function Login() {
@@ -15,30 +16,18 @@ function Login() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:8000/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: email,
-          contraseña: password,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.detail || "Error al iniciar sesión");
-        setLoading(false);
-        return;
-      }
+      // Usar la función de la API
+      const data = await login(email, password);
 
       console.log('✅ Login exitoso:', data);
 
-      // ✅ GUARDAR EN sessionStorage (NO localStorage)
+      // GUARDAR EN sessionStorage
+      // El backend devuelve el objeto 'user' y el 'access_token'
       sessionStorage.setItem('userId', data.user.id_usuarios);
       sessionStorage.setItem('userEmail', data.user.email);
       sessionStorage.setItem('userName', data.user.nombreCompleto);
       sessionStorage.setItem('userRol', data.user.rol);
+      sessionStorage.setItem('token', data.access_token); // Guardar el token
       sessionStorage.setItem('isLoggedIn', 'true');
 
       // Mensaje de bienvenida
@@ -53,7 +42,7 @@ function Login() {
 
     } catch (err) {
       console.error('❌ Error:', err);
-      setError("No se pudo conectar con el servidor.");
+      setError(err.message || "No se pudo conectar con el servidor.");
       setLoading(false);
     }
   };
@@ -67,7 +56,11 @@ function Login() {
             INICIA SESIÓN CON TU CORREO ELECTRÓNICO Y CONTRASEÑA.
           </p>
 
-          {error && <p className="login-error">⚠️ {error}</p>}
+          {/* El CSS original usa 'login-error' pero el JSX usa 'error-message'
+              Asegúrate de que 'login.css' tenga la clase .login-error 
+              o cambia esto a className="error-message" 
+          */}
+          {error && <p className="error-message">⚠️ {error}</p>}
 
           <form onSubmit={handleSubmit}>
             <input

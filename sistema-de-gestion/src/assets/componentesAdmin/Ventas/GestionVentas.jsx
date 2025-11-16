@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-//import "./GestionVentas.css";
+import "./GestionVentas.css";
 
 export default function GestionVentas() {
   const [pedidos, setPedidos] = useState([

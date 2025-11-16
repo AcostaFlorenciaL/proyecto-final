@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Empleados from '../../componentesAdmin/Empleados/Empleados';
 import GestionVentas from '../../componentesAdmin/Ventas/GestionVentas';
 import HistorialPedidos from "../../componentesAdmin/Historial/HistorialPedidos";
-//import './AdminPage.css';
+import './AdminPage.css';
 
 export default function AdminPage({ usuario, onLogout }) {
   const [active, setActive] = useState("ventas");
