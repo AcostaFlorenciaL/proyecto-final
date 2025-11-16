@@ -1,0 +1,84 @@
+/* Importar fuente Poppins */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* Variables de la paleta de colores */
+:root {
+  --naranja-vivo: #fc4d02;
+  --crema-claro: #fffbe8;
+  --naranja-suave: #fc913a;
+  --negro: #000000;
+  --blanco: #ffffff;
+}
+
+/* Tipografía general */
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: var(--crema-claro);
+}
+
+h2, h3, p {
+  font-family: 'Poppins', sans-serif;
+}
+
+h2 {
+  font-weight: 700;
+  color: var(--negro);
+}
+
+h3 {
+  font-weight: 500;
+  color: var(--negro);
+}
+
+/* Colores y estilos de cards */
+.card {
+  background-color: var(--naranja-suave);
+  border: none;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 24px rgba(252, 77, 2, 0.2) !important;
+}
+
+.card-img-top {
+  border-bottom: 4px solid var(--naranja-vivo);
+}
+
+.card-body {
+  background-color: var(--naranja-suave);
+}
+
+/* Botones */
+.btn-primary {
+  background-color: var(--naranja-vivo);
+  border: none;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  color: var(--blanco);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-primary:hover {
+  background-color: #e04302;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(252, 77, 2, 0.3);
+}
+
+.btn-primary:active {
+  background-color: #e04302;
+  transform: scale(0.98);
+}
+
+
+/* Mapa */
+.ratio iframe {
+  border: 3px solid var(--naranja-vivo);
+  border-radius: 8px;
+}

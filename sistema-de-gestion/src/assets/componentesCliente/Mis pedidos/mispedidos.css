@@ -1,0 +1,82 @@
+:root {
+  --naranja-vivo: #fc4d02;
+  --crema-claro: #fffbe8;
+  --naranja-suave: #fc913a;
+  --negro: #000000;
+  --blanco: #ffffff;
+}
+
+body {
+  background-color: var(--crema-claro);
+  font-family: "Roboto", sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.mis-pedidos-container {
+  padding: 20px;
+}
+
+.mis-pedidos-container h2 {
+  color: var(--naranja-vivo);
+  letter-spacing: 1px;
+  margin-bottom: 20px;
+}
+
+.pedido-card {
+  background-color: var(--naranja-suave);
+  color: var(--negro);
+  border: 2px solid var(--naranja-vivo);
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 20px;
+  position: relative;
+  transition: transform 0.2s ease;
+}
+
+.pedido-card:hover {
+  transform: scale(1.02);
+}
+
+.estado {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  background-color: var(--naranja-vivo);
+  color: var(--blanco);
+}
+
+.estado.entregado {
+  background-color: var(--naranja-vivo);
+}
+
+.estado.pendiente {
+  background-color: #ffd580;
+  color: var(--negro);
+}
+
+.pedido-id {
+  font-weight: bold;
+  margin: 5px 0;
+  color: var(--blanco);
+}
+
+.pedido-productos {
+  margin: 5px 0;
+}
+
+.pedido-fecha {
+  color: var(--blanco);
+  margin: 5px 0;
+}
+
+.pedido-total {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: var(--blanco);
+}

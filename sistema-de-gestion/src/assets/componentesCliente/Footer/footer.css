@@ -1,0 +1,85 @@
+.custom-footer {
+  background: linear-gradient(135deg, #fc913a 0%, #fc4d02 100%);
+  color: #ffffff;
+  box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.15);
+  font-family: 'Montserrat', sans-serif;
+}
+
+
+.footer-text {
+  color: #ffffff;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+
+.footer-link {
+  color: #fffbe8;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+}
+
+
+.footer-link:hover {
+  color: #ffffff;
+  transform: translateY(-2px);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+
+.footer-link i {
+  font-size: 1.2rem;
+  transition: transform 0.3s ease;
+}
+
+
+.footer-link:hover i {
+  transform: scale(1.15);
+}
+
+.fw-semibold {
+  font-weight: 600;
+  color: #fffbe8;
+  font-size: 1.05rem;
+}
+
+@media (max-width: 768px) {
+  .custom-footer {
+    padding: 1.5rem 0;
+  }
+
+
+  .footer-text {
+    font-size: 0.9rem;
+  }
+
+
+  .footer-link {
+    font-size: 0.9rem;
+  }
+
+
+  .footer-link i {
+    font-size: 1.1rem;
+  }
+}
+
+
+@media (max-width: 480px) {
+  .custom-footer {
+    padding: 1.25rem 0;
+  }
+
+
+  .footer-text {
+    font-size: 0.85rem;
+  }
+
+
+  .footer-link {
+    font-size: 0.85rem;
+  }
+}
