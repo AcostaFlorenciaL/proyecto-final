@@ -1,9 +1,8 @@
 const API_URL = "http://localhost:8000/api";
 
 // --- Helper ---
-// Función para obtener el token de la sesión
 const getToken = () => {
-  return sessionStorage.getItem('token'); // Asumiremos que guardas el token aquí
+  return sessionStorage.getItem('token');
 };
 
 // --- Auth ---
@@ -11,7 +10,6 @@ export async function login(email, contraseña) {
   const response = await fetch(`${API_URL}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    // FastAPI espera los datos de login como form data
     body: new URLSearchParams({
       username: email,
       password: contraseña,
@@ -48,13 +46,10 @@ export async function getProductos() {
 
 // --- Pedidos ---
 export async function crearPedido(userId, pedido) {
-  // const token = getToken(); // Descomentar si implementas seguridad
-  
   const res = await fetch(`${API_URL}/pedidos/?user_id=${userId}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      // "Authorization": `Bearer ${token}` // Descomentar si implementas seguridad
     },
     body: JSON.stringify(pedido),
   });
@@ -68,14 +63,44 @@ export async function crearPedido(userId, pedido) {
 }
 
 export async function getPedidos(userId) {
-  // const token = getToken(); // Descomentar si implementas seguridad
-  
-  const res = await fetch(`${API_URL}/pedidos/usuario/${userId}`, {
-    headers: {
-      // "Authorization": `Bearer ${token}` // Descomentar si implementas seguridad
-    }
-  });
+  const res = await fetch(`${API_URL}/pedidos/usuario/${userId}`);
   if (!res.ok) throw new Error("Error al obtener pedidos");
+  return res.json();
+}
+
+// 🔥 NUEVO: Obtener todos los pedidos (historial completo)
+export async function getTodosPedidos() {
+  const res = await fetch(`${API_URL}/pedidos/todos`);
+  if (!res.ok) throw new Error("Error al obtener todos los pedidos");
+  return res.json();
+}
+
+// 🔥 NUEVO: Obtener pedidos activos (para gestión de ventas)
+export async function getPedidosActivos() {
+  const res = await fetch(`${API_URL}/pedidos/activos`);
+  if (!res.ok) throw new Error("Error al obtener pedidos activos");
+  return res.json();
+}
+
+// 🔥 NUEVO: Actualizar estado de pedido
+export async function actualizarEstadoPedido(pedidoId, nuevoEstado) {
+  const res = await fetch(`${API_URL}/pedidos/${pedidoId}/estado`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ estado: nuevoEstado })
+  });
+  if (!res.ok) throw new Error("Error al actualizar estado");
+  return res.json();
+}
+
+// 🔥 NUEVO: Actualizar pedido completo
+export async function actualizarPedido(pedidoId, pedidoData) {
+  const res = await fetch(`${API_URL}/pedidos/${pedidoId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(pedidoData)
+  });
+  if (!res.ok) throw new Error("Error al actualizar pedido");
   return res.json();
 }
 

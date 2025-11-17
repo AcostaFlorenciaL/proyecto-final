@@ -80,14 +80,33 @@ def get_pedidos_by_usuario(db: Session, user_id: int):
         .all()
 
 
-# 🔥 NUEVAS FUNCIONES PARA ADMIN
-
 def get_all_pedidos(db: Session):
     """
     Obtiene TODOS los pedidos del sistema con sus relaciones
-    Para vista de administrador
+    Para historial completo de administrador
     """
     return db.query(models.Pedido)\
+        .options(
+            joinedload(models.Pedido.detalles)
+            .joinedload(models.DetallePedido.producto),
+            joinedload(models.Pedido.cliente),
+            joinedload(models.Pedido.usuario)
+        )\
+        .order_by(models.Pedido.fecha.desc())\
+        .all()
+
+
+# 🔥 NUEVA FUNCIÓN: Obtener solo pedidos activos
+def get_pedidos_activos(db: Session):
+    """
+    Obtiene solo los pedidos ACTIVOS (no finalizados)
+    Estados: Pendiente, En preparación, Listo
+    Para gestión de ventas en tiempo real
+    """
+    estados_activos = ["Pendiente", "En preparación", "Listo"]
+    
+    return db.query(models.Pedido)\
+        .filter(models.Pedido.estado.in_(estados_activos))\
         .options(
             joinedload(models.Pedido.detalles)
             .joinedload(models.DetallePedido.producto),
@@ -114,4 +133,28 @@ def update_pedido_estado(db: Session, pedido_id: int, nuevo_estado: str):
     db.refresh(pedido)
     
     print(f"✅ Pedido {pedido_id} actualizado a estado: {nuevo_estado}")
+    return pedido
+
+
+# 🔥 NUEVA FUNCIÓN: Actualizar pedido completo
+def update_pedido(db: Session, pedido_id: int, pedido_update: schemas.PedidoUpdate):
+    """
+    Actualiza los datos de un pedido
+    """
+    pedido = db.query(models.Pedido).filter(
+        models.Pedido.id_pedido == pedido_id
+    ).first()
+    
+    if not pedido:
+        return None
+    
+    # Actualizar solo los campos que vienen en el update
+    update_data = pedido_update.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(pedido, key, value)
+    
+    db.commit()
+    db.refresh(pedido)
+    
+    print(f"✅ Pedido {pedido_id} actualizado")
     return pedido

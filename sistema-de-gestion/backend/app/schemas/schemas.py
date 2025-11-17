@@ -11,7 +11,7 @@ class UsuarioBase(BaseModel):
 
 class UsuarioCreate(UsuarioBase):
     contraseña: str
-    direccion: Optional[str] = None  # ✅ AGREGADO
+    direccion: Optional[str] = None
 
 class Usuario(UsuarioBase):
     id_usuarios: int
@@ -20,11 +20,25 @@ class Usuario(UsuarioBase):
     class Config:
         from_attributes = True
 
+# --- Cliente (para enviar en respuestas) ---
+class ClienteBase(BaseModel):
+    nombre_completo: str
+    telefono: Optional[str] = None
+    email: str
+    direccion: Optional[str] = None
+
+class Cliente(ClienteBase):
+    id_cliente: int
+    id_usuario: int
+
+    class Config:
+        from_attributes = True
+
 # --- Token (para Login) ---
 class Token(BaseModel):
     access_token: str
     token_type: str
-    user: Usuario  # Enlaza con Usuario
+    user: Usuario
 
 class TokenData(BaseModel):
     email: Optional[str] = None
@@ -90,6 +104,15 @@ class PedidoCreate(BaseModel):
     detalles: List[DetallePedidoCreate]
     notas: Optional[str] = None
 
+# 🔥 NUEVO: Schema para actualizar pedidos
+class PedidoUpdate(BaseModel):
+    """
+    Schema para actualizar campos de un pedido
+    """
+    total: Optional[Decimal] = None
+    estado: Optional[str] = None
+    notas: Optional[str] = None
+
 class Pedido(BaseModel):
     id_pedido: int
     id_usuario: int
@@ -99,6 +122,8 @@ class Pedido(BaseModel):
     estado: str
     notas: Optional[str] = None
     detalles: List[DetallePedido] = []
+    cliente: Optional[Cliente] = None  # 🔥 AGREGADO para incluir info del cliente
+    usuario: Optional[Usuario] = None
 
     class Config:
         from_attributes = True

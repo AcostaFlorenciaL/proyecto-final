@@ -28,17 +28,28 @@ def read_pedidos_usuario(user_id: int, db: Session = Depends(get_db)):
     return pedidos
 
 
-# 🔥 NUEVO: Endpoint para obtener TODOS los pedidos (para admin)
+# 🔥 NUEVO: Endpoint para obtener TODOS los pedidos (historial completo)
 @router.get("/todos", response_model=List[schemas.Pedido])
 def read_all_pedidos(db: Session = Depends(get_db)):
     """
-    Obtiene todos los pedidos del sistema (para administradores)
+    Obtiene todos los pedidos del sistema (para historial admin)
     """
     pedidos = crud_pedidos.get_all_pedidos(db)
     return pedidos
 
 
-# 🔥 NUEVO: Endpoint para cambiar el estado de un pedido
+# 🔥 NUEVO: Endpoint para obtener pedidos ACTIVOS (para gestión de ventas)
+@router.get("/activos", response_model=List[schemas.Pedido])
+def read_pedidos_activos(db: Session = Depends(get_db)):
+    """
+    Obtiene solo los pedidos activos (Pendiente, En preparación, Listo)
+    Para la gestión de ventas en tiempo real
+    """
+    pedidos = crud_pedidos.get_pedidos_activos(db)
+    return pedidos
+
+
+# 🔥 Endpoint para cambiar el estado de un pedido
 @router.put("/{pedido_id}/estado")
 def update_pedido_estado(
     pedido_id: int,
@@ -65,3 +76,24 @@ def update_pedido_estado(
         )
     
     return {"message": "Estado actualizado", "pedido_id": pedido_id, "nuevo_estado": nuevo_estado}
+
+
+# 🔥 NUEVO: Endpoint para editar un pedido completo
+@router.put("/{pedido_id}", response_model=schemas.Pedido)
+def update_pedido(
+    pedido_id: int,
+    pedido_update: schemas.PedidoUpdate,
+    db: Session = Depends(get_db)
+):
+    """
+    Actualiza los datos de un pedido (notas, total, etc.)
+    """
+    pedido = crud_pedidos.update_pedido(db, pedido_id=pedido_id, pedido_update=pedido_update)
+    
+    if not pedido:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Pedido no encontrado"
+        )
+    
+    return pedido

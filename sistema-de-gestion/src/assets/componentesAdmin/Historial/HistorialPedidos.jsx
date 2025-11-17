@@ -1,49 +1,49 @@
 import { useState, useEffect } from 'react';
+import { getTodosPedidos } from '/src/api/api.js';
 import '../admin/adminPage.css';
 
 export default function HistorialPedidos() {
   const [pedidos, setPedidos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [filtroEstado, setFiltroEstado] = useState('todos');
 
-  // Cargar todos los pedidos al montar el componente
   useEffect(() => {
-    cargarTodosPedidos();
+    cargarHistorial();
   }, []);
 
-  const cargarTodosPedidos = async () => {
+  const cargarHistorial = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // 🔥 NUEVO: Endpoint para obtener TODOS los pedidos (necesitas crearlo en el backend)
-      const response = await fetch('http://localhost:8000/api/pedidos/todos');
+      const data = await getTodosPedidos();
       
-      if (!response.ok) {
-        throw new Error('Error al cargar los pedidos');
-      }
-
-      const data = await response.json();
+      // 🔥 FILTRAR: Solo mostrar pedidos finalizados (Entregado o Cancelado)
+      const pedidosFinalizados = data.filter(p => 
+        p.estado === 'Entregado' || p.estado === 'Cancelado'
+      );
       
-      // Transformar los datos del backend al formato que necesita el frontend
-      const pedidosTransformados = data.map(pedido => ({
+      // Transformar los datos
+      const pedidosTransformados = pedidosFinalizados.map(pedido => ({
         id: pedido.id_pedido,
-        horaYNombre: `${formatearFecha(pedido.fecha)} - ${pedido.cliente?.nombre_completo || 'Cliente'}`,
+        cliente: pedido.cliente?.nombre_completo || 'Cliente',
+        email: pedido.cliente?.email || '',
+        telefono: pedido.cliente?.telefono || '',
+        direccion: pedido.cliente?.direccion || 'Sin dirección',
         productos: pedido.detalles?.map(d => 
           `${d.producto?.nombre || 'Producto'} x${d.cantidad}`
         ).join(', ') || 'Sin productos',
-        direccion: pedido.cliente?.direccion || 'Sin dirección',
         estado: pedido.estado,
-        clienteId: pedido.id_cliente,
-        usuarioId: pedido.id_usuario,
         total: pedido.total,
-        notas: pedido.notas
+        notas: pedido.notas,
+        fecha: formatearFecha(pedido.fecha)
       }));
 
       setPedidos(pedidosTransformados);
       setLoading(false);
     } catch (err) {
-      console.error('❌ Error al cargar pedidos:', err);
+      console.error('❌ Error al cargar historial:', err);
       setError(err.message);
       setLoading(false);
     }
@@ -51,46 +51,19 @@ export default function HistorialPedidos() {
 
   const formatearFecha = (fechaStr) => {
     const fecha = new Date(fechaStr);
-    const hora = fecha.toLocaleTimeString('es-AR', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    return fecha.toLocaleString('es-AR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
-    return hora;
-  };
-
-  const cambiarEstado = async (pedidoId, nuevoEstado) => {
-    try {
-      const response = await fetch(`http://localhost:8000/api/pedidos/${pedidoId}/estado`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ estado: nuevoEstado })
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al actualizar el estado');
-      }
-
-      // Actualizar el estado localmente
-      setPedidos(pedidos.map(p => 
-        p.id === pedidoId ? { ...p, estado: nuevoEstado } : p
-      ));
-    } catch (err) {
-      console.error('❌ Error al cambiar estado:', err);
-      alert('Error al actualizar el estado del pedido');
-    }
   };
 
   const getEstadoClass = (estado) => {
     switch(estado?.toLowerCase()) {
       case 'entregado':
         return 'success';
-      case 'en proceso':
-      case 'en preparación':
-        return 'warning';
-      case 'pendiente':
-        return 'secondary';
       case 'cancelado':
         return 'danger';
       default:
@@ -98,12 +71,16 @@ export default function HistorialPedidos() {
     }
   };
 
+  const pedidosFiltrados = filtroEstado === 'todos' 
+    ? pedidos 
+    : pedidos.filter(p => p.estado === filtroEstado);
+
   if (loading) {
     return (
       <main className="pedidos-main">
         <div className="text-center py-5">
           <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Cargando pedidos...</span>
+            <span className="visually-hidden">Cargando historial...</span>
           </div>
           <p className="mt-3">Cargando historial de pedidos...</p>
         </div>
@@ -119,7 +96,7 @@ export default function HistorialPedidos() {
           Error: {error}
           <button 
             className="btn btn-sm btn-outline-danger ms-3"
-            onClick={cargarTodosPedidos}
+            onClick={cargarHistorial}
           >
             Reintentar
           </button>
@@ -132,27 +109,39 @@ export default function HistorialPedidos() {
     <main className="pedidos-main">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1>Historial de Pedidos</h1>
-        <button 
-          className="btn btn-primary"
-          onClick={cargarTodosPedidos}
-          title="Refrescar"
-        >
-          <i className="bi bi-arrow-clockwise me-2"></i>
-          Refrescar
-        </button>
+        <div className="d-flex gap-2">
+          <select
+            className="form-select form-select-sm"
+            value={filtroEstado}
+            onChange={(e) => setFiltroEstado(e.target.value)}
+            style={{ width: 'auto' }}
+          >
+            <option value="todos">Todos</option>
+            <option value="Entregado">Entregados</option>
+            <option value="Cancelado">Cancelados</option>
+          </select>
+          <button 
+            className="btn btn-primary btn-sm"
+            onClick={cargarHistorial}
+            title="Refrescar"
+          >
+            <i className="bi bi-arrow-clockwise me-2"></i>
+            Refrescar
+          </button>
+        </div>
       </div>
 
       <section className="pedidos-section">
         <div className="pedidos-container">
-          {pedidos.length === 0 ? (
+          {pedidosFiltrados.length === 0 ? (
             <div className="pedidos-empty">
               <i className="bi bi-inbox fs-1 mb-3"></i>
-              <h3>No hay pedidos registrados</h3>
-              <p>Los pedidos aparecerán aquí cuando los clientes realicen compras</p>
+              <h3>No hay pedidos finalizados</h3>
+              <p>Los pedidos completados o cancelados aparecerán aquí</p>
             </div>
           ) : (
             <div className="pedidos-grid">
-              {pedidos.map((pedido) => (
+              {pedidosFiltrados.map((pedido) => (
                 <div key={pedido.id} className="pedido-card">
                   <div className="pedido-card-header">
                     <span className="pedido-numero">Pedido #{pedido.id}</span>
@@ -163,18 +152,24 @@ export default function HistorialPedidos() {
                   
                   <div className="pedido-card-body">
                     <div className="pedido-section">
-                      <h6><i className="bi bi-clock me-2"></i>Hora y Cliente</h6>
-                      <p>{pedido.horaYNombre}</p>
-                    </div>
-                    
-                    <div className="pedido-section">
-                      <h6><i className="bi bi-bag me-2"></i>Productos</h6>
-                      <p>{pedido.productos}</p>
+                      <h6><i className="bi bi-person me-2"></i>Cliente</h6>
+                      <p>{pedido.cliente}</p>
+                      {pedido.telefono && (
+                        <p className="text-muted small">
+                          <i className="bi bi-telephone me-1"></i>
+                          {pedido.telefono}
+                        </p>
+                      )}
                     </div>
                     
                     <div className="pedido-section">
                       <h6><i className="bi bi-geo-alt me-2"></i>Dirección</h6>
                       <p>{pedido.direccion}</p>
+                    </div>
+                    
+                    <div className="pedido-section">
+                      <h6><i className="bi bi-bag me-2"></i>Productos</h6>
+                      <p>{pedido.productos}</p>
                     </div>
 
                     {pedido.notas && (
@@ -185,25 +180,15 @@ export default function HistorialPedidos() {
                     )}
                     
                     <div className="pedido-section">
+                      <h6><i className="bi bi-clock me-2"></i>Fecha</h6>
+                      <p className="text-muted small">{pedido.fecha}</p>
+                    </div>
+                    
+                    <div className="pedido-section">
                       <h6><i className="bi bi-cash me-2"></i>Total</h6>
                       <p className="fw-bold text-success">
                         ${parseFloat(pedido.total).toLocaleString('es-AR')}
                       </p>
-                    </div>
-                    
-                    <div className="pedido-section pedido-estado">
-                      <h6>Cambiar Estado</h6>
-                      <select
-                        className={`form-select form-select-sm estado-select estado-${pedido.estado.toLowerCase().replace(' ', '-')}`}
-                        value={pedido.estado}
-                        onChange={(e) => cambiarEstado(pedido.id, e.target.value)}
-                      >
-                        <option value="Pendiente">Pendiente</option>
-                        <option value="En preparación">En preparación</option>
-                        <option value="Listo">Listo</option>
-                        <option value="Entregado">Entregado</option>
-                        <option value="Cancelado">Cancelado</option>
-                      </select>
                     </div>
                   </div>
                 </div>
