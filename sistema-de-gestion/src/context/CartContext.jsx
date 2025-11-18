@@ -15,10 +15,14 @@ export const CartProvider = ({ children }) => {
 
   // ✅ Función helper para parsear precios
   const parsePrice = (precio) => {
+    // Si ya es un número, devolverlo tal cual
     if (typeof precio === 'number') return precio;
-    // Elimina símbolos y convierte a número
-    const cleaned = String(precio).replace(/[$.]/g, '').replace(',', '.');
-    return parseFloat(cleaned) || 0;
+    // Si es un string, limpiarlo y convertir
+    if (typeof precio === 'string') {
+      const cleaned = precio.replace(/[$.]/g, '').replace(',', '.');
+      return parseFloat(cleaned) || 0;
+    }
+    return 0;
   };
 
   const addToCart = (item) => {
@@ -36,11 +40,11 @@ export const CartProvider = ({ children }) => {
         );
       }
       
-      // ✅ Asegurar que el precio sea numérico al agregar
+      // ✅ Guardar el precio tal como viene (número puro)
       return [...prevItems, { 
         ...item, 
         cantidad: 1,
-        precio: parsePrice(item.precio) 
+        precio: item.precio  // ← No parsear, guardar tal cual
       }];
     });
   };
@@ -74,7 +78,7 @@ export const CartProvider = ({ children }) => {
   // ✅ Cálculo de total mejorado
   const getCartTotal = () => {
     return cartItems.reduce((total, item) => {
-      const precio = parsePrice(item.precio);
+      let precio = parsePrice(item.precio);
       return total + (precio * item.cantidad);
     }, 0);
   };

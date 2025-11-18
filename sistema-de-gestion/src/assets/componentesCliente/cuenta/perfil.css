@@ -76,6 +76,12 @@
   outline: none;
 }
 
+.form-control:disabled {
+  background-color: var(--gris-claro);
+  cursor: not-allowed;
+  color: var(--gris-oscuro);
+}
+
 .form-control[readonly] {
   background-color: var(--gris-claro);
   cursor: not-allowed;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '/src/context/CartContext';
 import Buscador from '../Buscador/Buscador';
@@ -8,8 +8,15 @@ const Nav = () => {
   const navigate = useNavigate();
   const location = useLocation(); // 👈 Detecta la ruta actual
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const { getCartCount } = useCart();
   const cartCount = getCartCount();
+
+  useEffect(() => {
+    // Verificar si el usuario está autenticado
+    const loggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
+    setIsLoggedIn(loggedIn);
+  }, [location]); // Se actualiza cuando cambia la ruta
 
   const handleSearch = (searchTerm) => {
     console.log('Búsqueda:', searchTerm);
@@ -21,7 +28,7 @@ const Nav = () => {
 
   const isActive = (path) => location.pathname === path ? 'active' : '';
 
-    if (location.pathname === '/admin') {
+    if (location.pathname === '/admin' || location.pathname === '/login' || location.pathname === '/registro') {
     return null;
   }
 
@@ -73,15 +80,17 @@ const Nav = () => {
                 CARTA
               </a>
             </li>
-            <li className="nav-item">
-              <a
-                className={`nav-link-custom ${isActive('/pedidos')}`}
-                href="/pedidos"
-                onClick={(e) => { e.preventDefault(); navigate('/pedidos'); }}
-              >
-                MIS PEDIDOS
-              </a>
-            </li>
+            {isLoggedIn && (
+              <li className="nav-item">
+                <a
+                  className={`nav-link-custom ${isActive('/pedidos')}`}
+                  href="/pedidos"
+                  onClick={(e) => { e.preventDefault(); navigate('/pedidos'); }}
+                >
+                  MIS PEDIDOS
+                </a>
+              </li>
+            )}
             <li className="nav-item">
               <a
                 className={`nav-link-custom ${isActive('/info')}`}
@@ -106,13 +115,23 @@ const Nav = () => {
                 </span>
               )}
             </button>
-            <button
-              className="icon-btn"
-              onClick={() => navigate('/perfil')}
-              aria-label="Perfil de usuario"
-            >
-              <i className="bi bi-person-circle"></i>
-            </button>
+            {isLoggedIn ? (
+              <button
+                className="icon-btn"
+                onClick={() => navigate('/perfil')}
+                aria-label="Perfil de usuario"
+              >
+                <i className="bi bi-person-circle"></i>
+              </button>
+            ) : (
+              <button
+                className="icon-btn"
+                onClick={() => navigate('/login')}
+                aria-label="Iniciar sesión"
+              >
+                <i className="bi bi-box-arrow-in-right"></i>
+              </button>
+            )}
           </div>
         </div>
       </div>

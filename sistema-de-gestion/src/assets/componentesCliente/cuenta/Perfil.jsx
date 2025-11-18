@@ -7,13 +7,13 @@ const Perfil = () => {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [showAlert, setShowAlert] = useState({ show: false, message: '', type: '' });
+  const [cargando, setCargando] = useState(true);
   
   const [userData, setUserData] = useState({
-    nombre: 'Juan',
-    apellido: 'Pérez',
-    email: 'juan.perez@email.com',
-    telefono: '+54 11 1234-5678',
-    direccion: 'Av. Corrientes 1234, CABA'
+    nombre: '',
+    email: '',
+    telefono: '',
+    direccion: ''
   });
 
   const [originalData, setOriginalData] = useState({ ...userData });
@@ -25,11 +25,60 @@ const Perfil = () => {
   });
 
   useEffect(() => {
-    const isLoggedIn = sessionStorage.getItem('isLoggedIn');
-    if (!isLoggedIn) {
-      navigate('/login');
-    }
+    cargarDatosUsuario();
   }, [navigate]);
+
+  const cargarDatosUsuario = async () => {
+    try {
+      const email = sessionStorage.getItem('userEmail');
+      const userId = sessionStorage.getItem('userId');
+      
+      if (!userId) {
+        navigate('/login');
+        return;
+      }
+
+      // Obtener datos del usuario desde el backend
+      const response = await fetch(`http://localhost:8000/api/auth/usuarios/${userId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Obtener info del cliente (dirección, etc)
+        const clienteResponse = await fetch(`http://localhost:8000/api/auth/cliente/usuario/${userId}`);
+        let clienteData = null;
+        
+        if (clienteResponse.ok) {
+          clienteData = await clienteResponse.json();
+        }
+
+        setUserData({
+          nombre: data.nombreCompleto || '',
+          email: data.email || email || '',
+          telefono: data.telefono || '',
+          direccion: clienteData?.direccion || ''
+        });
+        
+        setOriginalData({
+          nombre: data.nombreCompleto || '',
+          email: data.email || email || '',
+          telefono: data.telefono || '',
+          direccion: clienteData?.direccion || ''
+        });
+      } else {
+        console.error('Error al cargar datos del usuario');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setCargando(false);
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -64,20 +113,54 @@ const Perfil = () => {
     setIsEditing(false);
   };
 
-  const handleSave = (e) => {
-    e.preventDefault();
+  const handleSave = async (e) => {
+    if (e) {
+      e.preventDefault();
+    }
 
-    if (!userData.nombre || !userData.apellido || !userData.telefono || !userData.direccion) {
+    if (!userData.nombre || !userData.telefono || !userData.direccion) {
       displayAlert('Complete todos los campos obligatorios', 'danger');
       return;
     }
 
-    setOriginalData({ ...userData });
-    setIsEditing(false);
-    displayAlert('Datos actualizados correctamente', 'success');
+    try {
+      const userId = sessionStorage.getItem('userId');
+      const response = await fetch(`http://localhost:8000/api/auth/usuarios/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          nombreCompleto: userData.nombre,
+          telefono: userData.telefono,
+          direccion: userData.direccion
+        })
+      });
+
+      if (response.ok) {
+        const responseData = await response.json();
+        console.log('✅ Perfil actualizado:', responseData);
+        
+        setOriginalData({ ...userData });
+        setIsEditing(false);
+        displayAlert('Datos actualizados correctamente', 'success');
+        
+        // Recargar los datos para verificar que se guardaron
+        setTimeout(() => {
+          cargarDatosUsuario();
+        }, 500);
+      } else {
+        const errorData = await response.json();
+        console.error('Error en la respuesta:', errorData);
+        displayAlert('Error al actualizar los datos: ' + (errorData.detail || 'Error desconocido'), 'danger');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      displayAlert('Error al actualizar los datos: ' + error.message, 'danger');
+    }
   };
 
-  const handlePasswordSubmit = (e) => {
+  const handlePasswordSubmit = async (e) => {
     e.preventDefault();
 
     if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
@@ -95,18 +178,47 @@ const Perfil = () => {
       return;
     }
 
-    displayAlert('Contraseña actualizada correctamente', 'success');
-    setPasswordData({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
-    });
+    try {
+      const userId = sessionStorage.getItem('userId');
+      const response = await fetch(`http://localhost:8000/api/auth/cambiar-contraseña/${userId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword
+        })
+      });
+
+      if (response.ok) {
+        displayAlert('Contraseña actualizada correctamente', 'success');
+        setPasswordData({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
+      } else {
+        const errorData = await response.json();
+        displayAlert(errorData.detail || 'Error al cambiar la contraseña', 'danger');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      displayAlert('Error al cambiar la contraseña', 'danger');
+    }
   };
 
   const handleLogout = () => {
     if (window.confirm('¿Está seguro que desea cerrar sesión?')) {
-      sessionStorage.clear();
-      localStorage.clear();
+      // Limpiar el almacenamiento
+      sessionStorage.removeItem('userId');
+      sessionStorage.removeItem('email');
+      sessionStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('email');
+      localStorage.removeItem('isLoggedIn');
+      
+      // Navegar al login
       navigate('/login');
     }
   };
@@ -114,175 +226,169 @@ const Perfil = () => {
   return (
     <div className="profile-page">
       <div className="profile-container">
-        {showAlert.show && (
-          <div className={`alert alert-${showAlert.type} alert-custom alert-dismissible fade show`} role="alert">
-            <i className={`bi ${showAlert.type === 'success' ? 'bi-check-circle' : 'bi-exclamation-triangle'} me-2`}></i>
-            {showAlert.message}
-            <button 
-              type="button" 
-              className="btn-close" 
-              onClick={() => setShowAlert({ show: false, message: '', type: '' })}
-              aria-label="Close"
-            ></button>
+        {cargando ? (
+          <div className="text-center mt-5">
+            <p>Cargando datos del perfil...</p>
           </div>
-        )}
+        ) : (
+          <>
+            {showAlert.show && (
+              <div className={`alert alert-${showAlert.type} alert-custom alert-dismissible fade show`} role="alert">
+                <i className={`bi ${showAlert.type === 'success' ? 'bi-check-circle' : 'bi-exclamation-triangle'} me-2`}></i>
+                {showAlert.message}
+                <button 
+                  type="button" 
+                  className="btn-close" 
+                  onClick={() => setShowAlert({ show: false, message: '', type: '' })}
+                  aria-label="Close"
+                ></button>
+              </div>
+            )}
 
-        <div className="profile-card">
-          <div className="profile-header">
-            <div className="profile-avatar">
-              <i className="bi bi-person-fill"></i>
-            </div>
-            <h2>{userData.nombre} {userData.apellido}</h2>
-            <p className="mb-0">{userData.email}</p>
-          </div>
-
-          <div className="profile-body">
-            <div className="section-title">
-              <i className="bi bi-person-badge me-2"></i>Información Personal
-            </div>
-
-            <form onSubmit={handleSave}>
-              <div className="row mb-3">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Nombre <span className="text-danger">*</span></label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="nombre"
-                    value={userData.nombre}
-                    onChange={handleInputChange}
-                    readOnly={!isEditing}
-                    required
-                  />
+            <div className="profile-card">
+              <div className="profile-header">
+                <div className="profile-avatar">
+                  <i className="bi bi-person-fill"></i>
                 </div>
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Apellido <span className="text-danger">*</span></label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="apellido"
-                    value={userData.apellido}
-                    onChange={handleInputChange}
-                    readOnly={!isEditing}
-                    required
-                  />
+                <h2>{userData.nombre}</h2>
+                <p className="mb-0">{userData.email}</p>
+              </div>
+
+              <div className="profile-body">
+                <div className="section-title">
+                  <i className="bi bi-person-badge me-2"></i>Información Personal
                 </div>
-              </div>
 
-              <div className="mb-3">
-                <label className="form-label">Correo Electrónico <span className="text-danger">*</span></label>
-                <input
-                  type="email"
-                  className="form-control"
-                  name="email"
-                  value={userData.email}
-                  readOnly
-                  required
-                />
-              </div>
+                <div>
+                  <div className="mb-3">
+                    <label className="form-label">Nombre <span className="text-danger">*</span></label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="nombre"
+                      value={userData.nombre}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      required
+                    />
+                  </div>
 
-              <div className="mb-3">
-                <label className="form-label">Teléfono <span className="text-danger">*</span></label>
-                <input
-                  type="tel"
-                  className="form-control"
-                  name="telefono"
-                  value={userData.telefono}
-                  onChange={handleInputChange}
-                  readOnly={!isEditing}
-                  required
-                />
-              </div>
+                  <div className="mb-3">
+                    <label className="form-label">Correo Electrónico <span className="text-danger">*</span></label>
+                    <input
+                      type="email"
+                      className="form-control"
+                      name="email"
+                      value={userData.email}
+                      disabled
+                      required
+                    />
+                  </div>
 
-              <div className="mb-3">
-                <label className="form-label">Dirección <span className="text-danger">*</span></label>
-                <input
-                  type="text"
-                  className="form-control"
-                  name="direccion"
-                  value={userData.direccion}
-                  onChange={handleInputChange}
-                  readOnly={!isEditing}
-                  required
-                />
-              </div>
+                  <div className="mb-3">
+                    <label className="form-label">Teléfono <span className="text-danger">*</span></label>
+                    <input
+                      type="tel"
+                      className="form-control"
+                      name="telefono"
+                      value={userData.telefono}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      required
+                    />
+                  </div>
 
-              <div className="d-flex gap-2 flex-wrap">
-                {!isEditing ? (
-                  <button type="button" className="btn btn-primary-custom" onClick={handleEdit}>
-                    <i className="bi bi-pencil-square me-2"></i>Editar Perfil
-                  </button>
-                ) : (
-                  <>
+                  <div className="mb-3">
+                    <label className="form-label">Dirección <span className="text-danger">*</span></label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="direccion"
+                      value={userData.direccion}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      required
+                    />
+                  </div>
+
+                  <div className="d-flex gap-2 flex-wrap">
+                    {!isEditing ? (
+                      <button type="button" className="btn btn-primary-custom" onClick={handleEdit}>
+                        <i className="bi bi-pencil-square me-2"></i>Editar Perfil
+                      </button>
+                    ) : (
+                      <>
+                        <button type="button" className="btn btn-primary-custom" onClick={handleSave}>
+                          <i className="bi bi-check-circle me-2"></i>Guardar Cambios
+                        </button>
+                        <button type="button" className="btn btn-secondary-custom" onClick={handleCancel}>
+                          <i className="bi bi-x-circle me-2"></i>Cancelar
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <div className="password-section">
+                  <div className="section-title">
+                    <i className="bi bi-shield-lock me-2"></i>Cambiar Contraseña
+                  </div>
+
+                  <form onSubmit={handlePasswordSubmit}>
+                    <div className="mb-3">
+                      <label className="form-label">Contraseña Actual <span className="text-danger">*</span></label>
+                      <input
+                        type="password"
+                        className="form-control"
+                        name="currentPassword"
+                        value={passwordData.currentPassword}
+                        onChange={handlePasswordChange}
+                        required
+                      />
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="form-label">Nueva Contraseña <span className="text-danger">*</span></label>
+                      <input
+                        type="password"
+                        className="form-control"
+                        name="newPassword"
+                        value={passwordData.newPassword}
+                        onChange={handlePasswordChange}
+                        minLength="6"
+                        required
+                      />
+                      <small className="text-muted">Mínimo 6 caracteres</small>
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="form-label">Confirmar Nueva Contraseña <span className="text-danger">*</span></label>
+                      <input
+                        type="password"
+                        className="form-control"
+                        name="confirmPassword"
+                        value={passwordData.confirmPassword}
+                        onChange={handlePasswordChange}
+                        minLength="6"
+                        required
+                      />
+                    </div>
+
                     <button type="submit" className="btn btn-primary-custom">
-                      <i className="bi bi-check-circle me-2"></i>Guardar Cambios
+                      <i className="bi bi-key me-2"></i>Cambiar Contraseña
                     </button>
-                    <button type="button" className="btn btn-secondary-custom" onClick={handleCancel}>
-                      <i className="bi bi-x-circle me-2"></i>Cancelar
-                    </button>
-                  </>
-                )}
+                  </form>
+                </div>
+
+                <div className="mt-4 text-center">
+                  <button className="btn btn-outline-danger" onClick={handleLogout}>
+                    <i className="bi bi-box-arrow-right me-2"></i>Cerrar Sesión
+                  </button>
+                </div>
               </div>
-            </form>
-
-            <div className="password-section">
-              <div className="section-title">
-                <i className="bi bi-shield-lock me-2"></i>Cambiar Contraseña
-              </div>
-
-              <form onSubmit={handlePasswordSubmit}>
-                <div className="mb-3">
-                  <label className="form-label">Contraseña Actual <span className="text-danger">*</span></label>
-                  <input
-                    type="password"
-                    className="form-control"
-                    name="currentPassword"
-                    value={passwordData.currentPassword}
-                    onChange={handlePasswordChange}
-                    required
-                  />
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label">Nueva Contraseña <span className="text-danger">*</span></label>
-                  <input
-                    type="password"
-                    className="form-control"
-                    name="newPassword"
-                    value={passwordData.newPassword}
-                    onChange={handlePasswordChange}
-                    minLength="6"
-                    required
-                  />
-                  <small className="text-muted">Mínimo 6 caracteres</small>
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label">Confirmar Nueva Contraseña <span className="text-danger">*</span></label>
-                  <input
-                    type="password"
-                    className="form-control"
-                    name="confirmPassword"
-                    value={passwordData.confirmPassword}
-                    onChange={handlePasswordChange}
-                    minLength="6"
-                    required
-                  />
-                </div>
-
-                <button type="submit" className="btn btn-primary-custom">
-                  <i className="bi bi-key me-2"></i>Cambiar Contraseña
-                </button>
-              </form>
             </div>
-
-            <div className="mt-4 text-center">
-              <button className="btn btn-outline-danger" onClick={handleLogout}>
-                <i className="bi bi-box-arrow-right me-2"></i>Cerrar Sesión
-              </button>
-            </div>
-          </div>
-        </div>
+          </>
+        )}
       </div>
     </div>
   );
