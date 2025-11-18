@@ -5,8 +5,12 @@ from app.api.api import api_router
 from app.database import Base, engine
 
 # Esto crea las tablas en la base de datos (basado en models.py)
-# La primera vez que ejecutes la app, esto creará el archivo sql_app.db
-Base.metadata.create_all(bind=engine)
+# create_all() verifica si existen y solo crea las que falten
+try:
+    Base.metadata.create_all(bind=engine)
+    print("✅ Tablas verificadas/creadas exitosamente")
+except Exception as e:
+    print(f"⚠️ Error al crear tablas: {e}")
 
 app = FastAPI(
     title="Sistema de Gestión API",
@@ -14,11 +18,10 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Configuración de CORS
-# Permite que el frontend de React (ej. localhost:5173) se comunique con el backend
+# ⭐ CORS DEBE IR ANTES QUE LAS RUTAS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"], # Añade aquí el puerto de tu frontend
+    allow_origins=["http://localhost:5173", "http://localhost:3000", "*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
