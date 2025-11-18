@@ -63,6 +63,16 @@ const MisPedidos = () => {
     return `${dia}/${mes}/${año}, ${hora}:${minutos} hs`;
   };
 
+  // ✅ Función para formatear precio: 7000 -> $7.000
+  const formatearPrecio = (precio) => {
+    let num = typeof precio === 'number' ? precio : parseFloat(precio);
+    // Si el número es muy grande (> 100), dividirlo por 100
+    if (num > 100) {
+      num = num / 100;
+    }
+    return `$${Math.round(num).toLocaleString('es-AR')}`;
+  };
+
   const getEstadoClass = (estado) => {
     switch (estado.toLowerCase()) {
       case "entregado":
@@ -126,7 +136,7 @@ const MisPedidos = () => {
             {pedido.productos.join(", ")}
           </p>
           <p className="pedido-fecha">{pedido.fecha}</p>
-          <p className="pedido-total">${pedido.total.toLocaleString("es-AR")}</p>
+          <p className="pedido-total">{formatearPrecio(pedido.total)}</p>
         </div>
       ))}
     </div>

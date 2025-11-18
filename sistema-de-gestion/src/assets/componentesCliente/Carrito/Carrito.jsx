@@ -9,10 +9,20 @@ const Carrito = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  // ✅ Función para limpiar el precio
+  // ✅ Función para limpiar y normalizar el precio
   const parsePrice = (precio) => {
     if (typeof precio === 'number') return precio;
     return parseFloat(String(precio).replace(/[$.]/g, '').replace(',', '.')) || 0;
+  };
+
+  // ✅ Función para formatear precio: 7000 -> $7.000
+  const formatearPrecio = (precio) => {
+    let num = parsePrice(precio);
+    // Si el número es muy grande (> 100), dividirlo por 100
+    if (num > 100) {
+      num = num / 100;
+    }
+    return `$${Math.round(num).toLocaleString('es-AR')}`;
   };
 
   const handleRealizarPedido = async () => {
@@ -112,7 +122,7 @@ const Carrito = () => {
               <div className="carrito-item-info">
                 <h3>{item.nombre}</h3>
                 <p className="carrito-item-desc">{item.descripcion}</p>
-                <p className="carrito-item-precio">${precioNumerico.toLocaleString('es-AR')}</p>
+                <p className="carrito-item-precio">{formatearPrecio(item.precio)}</p>
               </div>
 
               <div className="carrito-item-controls">
@@ -136,7 +146,7 @@ const Carrito = () => {
               </div>
 
               <div className="carrito-item-subtotal">
-                ${subtotal.toLocaleString('es-AR')}
+                {formatearPrecio(subtotal)}
               </div>
             </div>
           );
@@ -146,7 +156,7 @@ const Carrito = () => {
       <div className="carrito-footer">
         <div className="carrito-total">
           <h3>Total:</h3>
-          <h2>${getCartTotal().toLocaleString('es-AR')}</h2>
+          <h2>{formatearPrecio(getCartTotal())}</h2>
         </div>
 
         <div className="carrito-actions">

@@ -1,11 +1,19 @@
 import './inicio.css';
+import { useNavigate } from 'react-router-dom';
+
 export default function Inicio() {
+  const navigate = useNavigate();
+
   const menuOptions = [
-    { id: 1, title: 'Pizzas', image: 'img/pizza.jpg', alt: 'Pizzas' },
-    { id: 2, title: 'Entre Panes', image: 'img/entrePanes.jpg', alt: 'Sandwiches' },
-    { id: 3, title: 'Al Plato', image: 'img/alPlato.jpg', alt: 'Platos' },
-    { id: 4, title: 'Bebidas', image: 'img/bebidas.jpg', alt: 'Bebidas' }
+    { id: 1, title: 'Pizzas', image: 'img/pizza.jpg', alt: 'Pizzas', id_categoria: 1 },
+    { id: 2, title: 'Entre Panes', image: 'img/entrePanes.jpg', alt: 'Sandwiches', id_categoria: 2 },
+    { id: 3, title: 'Al Plato', image: 'img/alPlato.jpg', alt: 'Platos', id_categoria: 3 },
+    { id: 4, title: 'Bebidas', image: 'img/bebidas.jpg', alt: 'Bebidas', id_categoria: 4 }
   ];
+
+  const handleNavigateToMenu = (id_categoria) => {
+    navigate(`/carta?categoria=${id_categoria}`);
+  };
 
   return (
     <main>
@@ -25,7 +33,10 @@ export default function Inicio() {
                     style={{ height: '300px', objectFit: 'cover' }}
                   />
                   <div className="card-body">
-                    <button className="btn btn-primary w-100">
+                    <button 
+                      className="btn btn-primary w-100"
+                      onClick={() => handleNavigateToMenu(option.id_categoria)}
+                    >
                       {option.title}
                     </button>
                   </div>
