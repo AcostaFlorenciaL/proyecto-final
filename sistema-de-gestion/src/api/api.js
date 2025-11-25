@@ -144,3 +144,84 @@ export async function deletePersonal(id) {
   if (!res.ok) throw new Error("Error al eliminar empleado");
   return res.json();
 }
+
+// --- Productos (Admin) ---
+export async function createProducto(productoData) {
+  const res = await fetch(`${API_URL}/productos/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(productoData)
+  });
+  if (!res.ok) throw new Error("Error al crear producto");
+  return res.json();
+}
+
+export async function updateProducto(id, productoData) {
+  const res = await fetch(`${API_URL}/productos/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(productoData)
+  });
+  if (!res.ok) throw new Error("Error al actualizar producto");
+  return res.json();
+}
+
+export async function deleteProducto(id) {
+  const res = await fetch(`${API_URL}/productos/${id}`, {
+    method: 'DELETE'
+  });
+  if (!res.ok) throw new Error("Error al eliminar producto");
+  return res.json();
+}
+
+export async function getCategorias() {
+  const res = await fetch(`${API_URL}/productos/categorias/list`);
+  if (!res.ok) throw new Error("Error al obtener categorías");
+  return res.json();
+}
+
+// --- Turnos (Admin) ---
+export async function getTurnos() {
+  const res = await fetch(`${API_URL}/turnos/`);
+  if (!res.ok) throw new Error("Error al obtener turnos");
+  return res.json();
+}
+
+export async function createTurno(turnoData) {
+  const res = await fetch(`${API_URL}/turnos/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(turnoData)
+  });
+  if (!res.ok) throw new Error("Error al crear turno");
+  return res.json();
+}
+
+export async function updateTurno(id, turnoData) {
+  const res = await fetch(`${API_URL}/turnos/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(turnoData)
+  });
+  if (!res.ok) throw new Error("Error al actualizar turno");
+  return res.json();
+}
+
+export async function deleteTurno(id) {
+  const res = await fetch(`${API_URL}/turnos/${id}`, {
+    method: 'DELETE'
+  });
+  if (!res.ok) throw new Error("Error al eliminar turno");
+  return res.json();
+}
+
+// --- Gestión de Accesos (Admin) ---
+export async function updateUsuarioAcceso(userId, puedeAcceder) {
+  const res = await fetch(`${API_URL}/usuarios/${userId}/acceso`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ puede_acceder: puedeAcceder })
+  });
+  if (!res.ok) throw new Error("Error al actualizar acceso");
+  return res.json();
+}

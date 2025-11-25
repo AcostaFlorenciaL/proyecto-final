@@ -1,4 +1,5 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DECIMAL, DATETIME, TEXT
+# sistema-de-gestion/backend/app/models/models.py
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DECIMAL, DATETIME, TEXT, Date
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -59,8 +60,23 @@ class Personal(Base):
     puesto = Column(String(50), nullable=False)
     telefono = Column(String(15))
     email = Column(String(50), nullable=False)
+    puede_acceder = Column(Boolean, default=True)  # ← Campo para control de acceso
 
     usuario = relationship("Usuario", back_populates="personal_info")
+    turnos = relationship("Turno", back_populates="personal")  # ← Relación con turnos
+
+class Turno(Base):
+    __tablename__ = "turnos"
+    id_turno = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    id_personal = Column(Integer, ForeignKey("personal.id_personal"), nullable=False)
+    sector = Column(String(50), nullable=False)
+    turno = Column(String(20), nullable=False)  # 'mañana', 'tarde', 'noche'
+    dia_semana = Column(String(20))  # 'lunes', 'martes', etc.
+    fecha_inicio = Column(Date)
+    fecha_fin = Column(Date)
+    activo = Column(Boolean, default=True)
+
+    personal = relationship("Personal", back_populates="turnos")
 
 class Pedido(Base):
     __tablename__ = "pedidos"
@@ -70,7 +86,6 @@ class Pedido(Base):
     fecha = Column(DATETIME, default=func.now())
     total = Column(DECIMAL(10, 2))
     estado = Column(String(20), default='Pendiente')
-    # ✅ metodo_pago eliminado
     notas = Column(TEXT)
 
     usuario = relationship("Usuario", back_populates="pedidos")

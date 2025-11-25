@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import Productos from '../productos/Productos';
 import Empleados from '../Empleados/Empleados';
+import Turnos from '../Empleados/Turnos';
+import Accesos from '../accesos/Accesos';
 import GestionVentas from '../Ventas/GestionVentas';
 import HistorialPedidos from "../Historial/HistorialPedidos";
 import './adminPage.css';
 
 export default function AdminPage() {
   const navigate = useNavigate();
-  const [active, setActive] = useState("ventas");
+  const [active, setActive] = useState("productos");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [usuario, setUsuario] = useState(null);
 
-  // ✅ Validar autenticación y rol de admin
   useEffect(() => {
     const isLoggedIn = sessionStorage.getItem('isLoggedIn');
     const userRol = sessionStorage.getItem('userRol');
@@ -32,14 +34,16 @@ export default function AdminPage() {
   }, [navigate]);
 
   const menuItems = [
-    { id: "empleados", label: "Gestión Empleados", icon: "bi-people" },
-    { id: "ventas", label: "Gestión Ventas", icon: "bi-cart" },
+    { id: "productos", label: "Productos", icon: "bi-box-seam" },
+    { id: "empleados", label: "Empleados", icon: "bi-people" },
+    { id: "turnos", label: "Turnos", icon: "bi-calendar3" },
+    { id: "accesos", label: "Accesos", icon: "bi-key" },
+    { id: "ventas", label: "Ventas", icon: "bi-cart" },
     { id: "historial", label: "Historial", icon: "bi-clock-history" },
   ];
 
   const handleMenuClick = (id) => {
     setActive(id);
-    // Cerrar sidebar en móvil después de seleccionar
     if (window.innerWidth <= 768) {
       setSidebarOpen(false);
     }
@@ -53,7 +57,6 @@ export default function AdminPage() {
     }
   };
 
-  // ✅ Mostrar loading mientras valida
   if (!usuario) {
     return (
       <div style={{ 
@@ -71,7 +74,6 @@ export default function AdminPage() {
 
   return (
     <div className="admin-container">
-      {/* Sidebar */}
       <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="admin-logo">
           <i className="bi bi-shop"></i>
@@ -91,7 +93,6 @@ export default function AdminPage() {
           ))}
         </nav>
 
-        {/* User Info & Logout */}
         <div className="admin-user-info">
           <div className="admin-user-card">
             <span className="admin-user-label">Sesión iniciada como:</span>
@@ -111,14 +112,15 @@ export default function AdminPage() {
         </div>
       </aside>
 
-      {/* Main Content */}
       <main className="admin-content">
+        {active === "productos" && <Productos />}
         {active === "empleados" && <Empleados />}
+        {active === "turnos" && <Turnos />}
+        {active === "accesos" && <Accesos />}
         {active === "ventas" && <GestionVentas />}
         {active === "historial" && <HistorialPedidos />}
       </main>
 
-      {/* ✅ Botón hamburguesa para móvil */}
       <button 
         className="admin-mobile-toggle"
         onClick={() => setSidebarOpen(!sidebarOpen)}

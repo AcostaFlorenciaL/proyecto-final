@@ -1,7 +1,8 @@
+# sistema-de-gestion/backend/app/schemas/schemas.py
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 from decimal import Decimal
-from datetime import datetime
+from datetime import datetime, date
 
 # --- Usuario con dirección ---
 class UsuarioBase(BaseModel):
@@ -43,6 +44,17 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     email: Optional[str] = None
 
+# --- Categoría ---
+class CategoriaBase(BaseModel):
+    nombre_categoria: str
+    descripcion: Optional[str] = None
+
+class Categoria(CategoriaBase):
+    id_categoria: int
+
+    class Config:
+        from_attributes = True
+
 # --- Producto ---
 class ProductoBase(BaseModel):
     nombre: str
@@ -67,6 +79,7 @@ class PersonalBase(BaseModel):
     puesto: str
     telefono: Optional[str] = None
     email: str
+    puede_acceder: Optional[bool] = True
 
 class PersonalCreate(PersonalBase):
     id_usuario: Optional[int] = None
@@ -74,6 +87,26 @@ class PersonalCreate(PersonalBase):
 class Personal(PersonalBase):
     id_personal: int
     id_usuario: Optional[int] = None
+
+    class Config:
+        from_attributes = True
+
+# --- Turno ---
+class TurnoBase(BaseModel):
+    id_personal: int
+    sector: str
+    turno: str  # 'mañana', 'tarde', 'noche'
+    dia_semana: Optional[str] = None  # 'lunes', 'martes', etc.
+    fecha_inicio: Optional[date] = None
+    fecha_fin: Optional[date] = None
+    activo: Optional[bool] = True
+
+class TurnoCreate(TurnoBase):
+    pass
+
+class Turno(TurnoBase):
+    id_turno: int
+    personal: Optional[Personal] = None
 
     class Config:
         from_attributes = True
@@ -104,7 +137,7 @@ class PedidoCreate(BaseModel):
     detalles: List[DetallePedidoCreate]
     notas: Optional[str] = None
 
-# 🔥 NUEVO: Schema para actualizar pedidos
+# 🔥 Schema para actualizar pedidos
 class PedidoUpdate(BaseModel):
     """
     Schema para actualizar campos de un pedido
@@ -122,7 +155,7 @@ class Pedido(BaseModel):
     estado: str
     notas: Optional[str] = None
     detalles: List[DetallePedido] = []
-    cliente: Optional[Cliente] = None  # 🔥 AGREGADO para incluir info del cliente
+    cliente: Optional[Cliente] = None
     usuario: Optional[Usuario] = None
 
     class Config:
